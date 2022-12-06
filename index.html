@@ -290,23 +290,70 @@
 			buyer = ""
 			price = 0
 		}
-		output_string = "<hr><h3>" + "Before Points Discount" + "</h3>";
-		output_string = output_string + "<table><tr><td>" + "Idy Total:" + "</td><td>$"+ roundTo(idy_total,2) + "</td></tr>";
+		
+		output_string = "<hr><h3>" + "Before Tax" + "</h3>";
+		output_string = output_string + "<table>";
+		if (idy_total>0){
+		output_string = output_string + "<tr><td>" + "Idy Total:" + "</td><td>$"+ roundTo(idy_total,2) + "</td></tr>";
+		}
+		if (sunny_total>0){
 		output_string = output_string + "<tr><td>" + "Sunny Total:" + "</td><td>$" + roundTo(sunny_total,2) + "</td></tr>";
+		}
+		if (susan_total>0){
 		output_string = output_string + "<tr><td>" + "Susan Total:" + "</td><td>$" + roundTo(susan_total,2) + "</td></tr>";
+		}
+		if (patty_total>0){
 		output_string = output_string + "<tr><td>" + "Patty Total:" + "</td><td>$" + roundTo(patty_total,2) + "</td></tr>";
-		output_string = output_string + "<tr><td>" + "Other Total:" + "</td><td>$" + roundTo(other_total,2) + "</td></tr></table>";
+		}
+		if (other_total>0){
+		output_string = output_string + "<tr><td>" + "Other Total:" + "</td><td>$" + roundTo(other_total,2) + "</td></tr>";
+		}
+		output_string = output_string + "</table>";
+		
+		output_string = output_string + "<hr><h3>" + "After Tax" + "</h3>";
+		output_string = output_string + "<table>";
+		if (idy_total>0){
+		output_string = output_string + "<tr><td>" + "Idy Total:" + "</td><td>$"+ roundTo(idy_total * 1.13,2) + "</td></tr>";
+		}
+		if (sunny_total>0){
+		output_string = output_string + "<tr><td>" + "Sunny Total:" + "</td><td>$" + roundTo(sunny_total * 1.13,2) + "</td></tr>";
+		}
+		if (susan_total>0){
+		output_string = output_string + "<tr><td>" + "Susan Total:" + "</td><td>$" + roundTo(susan_total * 1.13,2) + "</td></tr>";
+		}
+		if (patty_total>0){
+		output_string = output_string + "<tr><td>" + "Patty Total:" + "</td><td>$" + roundTo(patty_total * 1.13,2) + "</td></tr>";
+		}
+		if (other_total>0){
+		output_string = output_string + "<tr><td>" + "Other Total:" + "</td><td>$" + roundTo(other_total * 1.13,2) + "</td></tr>";
+		}
+		output_string = output_string + "</table>";
+		
 		idy_total = roundTo(idy_total * 1.13 - idy_total * 15 * 20 / 1000,2)
 		sunny_total = roundTo(sunny_total * 1.13 - sunny_total * 15 * 20 / 1000,2)
 		susan_total = roundTo(susan_total * 1.13 - susan_total * 15 * 20 / 1000,2)
 		patty_total = roundTo(patty_total * 1.13 - patty_total * 15 * 20 / 1000,2)
 		other_total = roundTo(other_total * 1.13 - other_total * 15 * 20 / 1000,2)
+		
 		output_string = output_string + "<hr><h3>" + "After Points Discount" + "</h3>";
-		output_string = output_string + "<table><tr><td>" + "Idy Total:" + "</td><td>$"+ idy_total + "</td></tr>";
+		output_string = output_string + "<table>";
+		if (idy_total>0){
+		output_string = output_string + "<tr><td>" + "Idy Total:" + "</td><td>$"+ idy_total + "</td></tr>";
+		}
+		if (sunny_total>0){
 		output_string = output_string + "<tr><td>" + "Sunny Total:" + "</td><td>$"+ sunny_total + "</td></tr>";
+		}
+		if (susan_total>0){
 		output_string = output_string + "<tr><td>" + "Susan Total:" + "</td><td>$"+ susan_total + "</td></tr>";
+		}
+		if (patty_total>0){
 		output_string = output_string + "<tr><td>" + "Patty Total:" + "</td><td>$"+ patty_total + "</td></tr>";
-		output_string = output_string + "<tr><td>" + "Other Total:" + "</td><td>$"+ other_total + "</td></tr></table>";
+		}
+		if (other_total>0){
+		output_string = output_string + "<tr><td>" + "Other Total:" + "</td><td>$"+ other_total + "</td></tr>";
+		}
+		output_string = output_string + "</table>";
+		
 		// The final output.
 		document.getElementById('output').innerHTML = output_string;
 		//console.log (arrValues);   // you can see the array values in your browsers console window. Thanks :-) 
