@@ -89,12 +89,22 @@
       input[type=radio]:checked + label:after {
       opacity: 1;
       }
-      input[type=text], input[type=password] {
+      input[type=password] {
       width: calc(100% - 57px);
       height: 36px;
       margin: 13px 0 0 -5px;
       padding-left: 10px; 
       border-radius: 0 5px 5px 0;
+      border: solid 1px #cbc9c9; 
+      box-shadow: 1px 2px 5px rgba(0,0,0,.09); 
+      background: #fff; 
+      }
+	  input[type=text],select{
+      width: calc(100% - 15px);
+      height: 36px;
+      margin: 0px 0 0 0px;
+      padding-left: 10px; 
+      border-radius: 5px 5px 5px 5px;
       border: solid 1px #cbc9c9; 
       box-shadow: 1px 2px 5px rgba(0,0,0,.09); 
       background: #fff; 
@@ -114,7 +124,7 @@
       margin-top: 10px;
       text-align: center;
       }
-      button {
+      button,input[type=button] {
       width: 100%;
       padding: 10px 0;
       margin: 10px auto;
@@ -125,93 +135,123 @@
       font-weight: 600;
       color: #fff;
       }
-      button:hover {
+	  
+      button:hover,input[type=button]:hover {
       background: #26a9e0;
       }
     </style>
 	<script>
-	  let arrHead = new Array();	// array for header.
-  arrHead = ['', 'Employee Name', 'Designation', 'Age'];
+	let arrHead = new Array();	// array for header.
+	arrHead = ['', 'Item', 'Price', 'Buyer'];
 
-  // first create TABLE structure with the headers. 
-  let createTable = () => {
-    let empTable = document.createElement('table');
-    empTable.setAttribute('id', 'empTable'); // table id.
+	// first create TABLE structure with the headers. 
+	let createTable = () => {
+		let empTable = document.createElement('table');
+		empTable.setAttribute('id', 'empTable'); // table id.
 
-    let tr = empTable.insertRow(-1);
-    for (let h = 0; h < arrHead.length; h++) {
-      let th = document.createElement('th'); // create table headers
-      th.innerHTML = arrHead[h];
-      tr.appendChild(th);
-    }
+		let tr = empTable.insertRow(-1);
+		for (let h = 0; h < arrHead.length; h++) {
+			let th = document.createElement('th'); // create table headers
+			th.innerHTML = arrHead[h];
+			tr.appendChild(th);
+		}
 
-    let div = document.getElementById('cont');
-    div.appendChild(empTable);  // add the TABLE to the container.
-  }
+		let div = document.getElementById('cont');
+		div.appendChild(empTable);  // add the TABLE to the container.
+	}
 
-  // now, add a new row to the TABLE.
-  let addRow = () => {
-    let empTab = document.getElementById('empTable');3
+	// now, add a new row to the TABLE.
+	let addRow = () => {
+		let empTab = document.getElementById('empTable');3
 
-    let rowCnt = empTab.rows.length;   // table row count.
-    let tr = empTab.insertRow(rowCnt); // the table row.
-    tr = empTab.insertRow(rowCnt);
+		let rowCnt = empTab.rows.length;   // table row count.
+		let tr = empTab.insertRow(rowCnt); // the table row.
+		tr = empTab.insertRow(rowCnt);
 
-    for (let c = 0; c < arrHead.length; c++) {
-      let td = document.createElement('td'); // table definition.
-      td = tr.insertCell(c);
+		for (let c = 0; c < arrHead.length; c++) {
+			let td = document.createElement('td'); // table definition.
+			td = tr.insertCell(c);
 
-      if (c === 0) {      // the first column.
-        // add a button in every new row in the first column.
-        let button = document.createElement('input');
+			if (c === 0) {      // the first column.
+				// add a button in every new row in the first column.
+				let button = document.createElement('input');
 
-        // set input attributes.
-        button.setAttribute('type', 'button');
-        button.setAttribute('value', 'Remove');
+				// set input attributes.
+				button.setAttribute('type', 'button');
+				button.setAttribute('value', '    -    ');
 
-        // add button's 'onclick' event.
-        button.setAttribute('onclick', 'removeRow(this)');
+				// add button's 'onclick' event.
+				button.setAttribute('onclick', 'removeRow(this)');
 
-        td.appendChild(button);
-      }
-      else {
-        // 2nd, 3rd and 4th column, will have textbox.
-        let ele = document.createElement('input');
-        ele.setAttribute('type', 'text');
-        ele.setAttribute('value', '');
+				td.appendChild(button);
+			}
+			else if (c === 3){
+				let SELECT = document.createElement('SELECT');
+				let OPT1 = document.createElement('OPTION');
+				OPT1.setAttribute('value', 0);
 
-        td.appendChild(ele);
-      }
-    }
-  }
+				let OPT2 = document.createElement('OPTION');
+				let OPT3 = document.createElement('OPTION');
+				let OPT4 = document.createElement('OPTION');
+				let OPT5 = document.createElement('OPTION');
+				OPT2.setAttribute('value', 0);
+				OPT2.setAttribute('selected', 'selected');
+				// also you can set use .selected as a property 
+				// OPT2.selected = true;
 
-  // delete TABLE row function.
-  let removeRow = (oButton) => {
-    let empTab = document.getElementById('empTable');
-    empTab.deleteRow(oButton.parentNode.parentNode.rowIndex); 
-    // button -> td -> tr.
-  }
+				OPT1.appendChild( document.createTextNode( 'Idy' ) );
+				OPT2.appendChild( document.createTextNode( 'Susan' ) );
+				OPT3.appendChild( document.createTextNode( 'Sunny' ) );
+				OPT4.appendChild( document.createTextNode( 'Patty' ) );
+				OPT5.appendChild( document.createTextNode( 'Other' ) );
 
-  // function to extract and submit table data.
-  let submit = () => {
-    let myTab = document.getElementById('empTable');
-    let arrValues = new Array();
+				SELECT.appendChild(OPT1);
+				SELECT.appendChild(OPT2);
+				SELECT.appendChild(OPT3);
+				SELECT.appendChild(OPT4);
+				SELECT.appendChild(OPT5);
 
-    // loop through each row of the table.
-    for (row = 1; row < myTab.rows.length - 1; row++) {
-      // loop through each cell in a row.
-      for (c = 0; c < myTab.rows[row].cells.length; c++) {  
-        let element = myTab.rows.item(row).cells[c];
-        if (element.childNodes[0].getAttribute('type') == 'text') {
-          arrValues.push("'" + element.childNodes[0].value + "'");
-        }
-      }
-    }
 
-    // The final output.
-    document.getElementById('output').innerHTML = arrValues;
-    //console.log (arrValues);   // you can see the array values in your browsers console window. Thanks :-) 
-  }
+				td.appendChild(SELECT);
+			}
+			else {
+				// 2nd, 3rd and 4th column, will have textbox.
+				let ele = document.createElement('input');
+				ele.setAttribute('type', 'text');
+				ele.setAttribute('value', '');
+
+				td.appendChild(ele);
+			}
+		}
+	}
+
+	// delete TABLE row function.
+	let removeRow = (oButton) => {
+		let empTab = document.getElementById('empTable');
+		empTab.deleteRow(oButton.parentNode.parentNode.rowIndex); 
+		// button -> td -> tr.
+	}
+
+	// function to extract and submit table data.
+	let submit = () => {
+		let myTab = document.getElementById('empTable');
+		let arrValues = new Array();
+
+		// loop through each row of the table.
+		for (row = 1; row < myTab.rows.length - 1; row++) {
+		  // loop through each cell in a row.
+		  for (c = 0; c < myTab.rows[row].cells.length; c++) {  
+			let element = myTab.rows.item(row).cells[c];
+			if (element.childNodes[0].getAttribute('type') == 'text') {
+			  arrValues.push("'" + element.childNodes[0].value + "'");
+			}
+		}
+	}
+
+		// The final output.
+		document.getElementById('output').innerHTML = arrValues;
+		//console.log (arrValues);   // you can see the array values in your browsers console window. Thanks :-) 
+	}
 	</script>
   </head>
 <body onload="createTable()">
@@ -245,18 +285,19 @@
           <button type="submit" href="/">Submit</button>
         </div>
       </form>
-		<h3>
+		<p class="btn-block">
 			Click the "Add New Row" button to add a new row to the table. <br> Enter values in each row and press the "Submit Data" button.
-		  </h3>
+		  </p>
 			
 		<p>
-		<input type="button" id="addRow" value="Add New Row" onclick="addRow()" />
+		<input class="account-type" type="button" id="addRow" value="Add New Row" onclick="addRow()" />
 		</p>
 
 		<div id="cont"></div>  <!-- the container to add the TABLE -->
 
 		<p>
 		<input type="button" id="bt" value="Submit Data" onclick="submit()" />
+		
 		</p>
 			
 		<p id='output'></p>
