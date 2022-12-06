@@ -6,9 +6,10 @@
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.4.1/css/all.css" integrity="sha384-5sAR7xN1Nv6T6+dT2mhtzEpVJvfS3NScPQTrOxhwjIuvcA67KV2R5Jz6kr4abQsz" crossorigin="anonymous">
     <style>
       html, body {
-      display: flex;
-      justify-content: center;
-      height: 100%;
+		display: flex;
+		justify-content: center;
+		height: 100%;
+		width: 100%;
       }
       body, div, h1, form, input, p { 
       padding: 0;
@@ -285,16 +286,19 @@
           <button type="submit" href="/">Submit</button>
         </div>
       </form>
-		<p class="btn-block">
+	  <hr>
+	  <div class="btn-block">
+		
+		<p>
 			Click the "Add New Row" button to add a new row to the table. <br> Enter values in each row and press the "Submit Data" button.
 		  </p>
 			
 		<p>
 		<input class="account-type" type="button" id="addRow" value="Add New Row" onclick="addRow()" />
 		</p>
-
+	</div>
 		<div id="cont"></div>  <!-- the container to add the TABLE -->
-
+		<hr>
 		<p>
 		<input type="button" id="bt" value="Submit Data" onclick="submit()" />
 		
