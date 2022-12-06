@@ -151,7 +151,13 @@
 
 		let tr = empTable.insertRow(-1);
 		for (let h = 0; h < arrHead.length; h++) {
-			let th = document.createElement('th'); // create table headers
+			let th = document.createElement('th'); // create table headers	
+			if (h === 2){
+				th.setAttribute('width', '20%');
+			}
+			if (h === 3){
+				th.setAttribute('width', '28%');
+			}
 			th.innerHTML = arrHead[h];
 			tr.appendChild(th);
 		}
@@ -170,6 +176,7 @@
 
 		for (let c = 0; c < arrHead.length; c++) {
 			let td = document.createElement('td'); // table definition.
+
 			td = tr.insertCell(c);
 
 			if (c === 0) {      // the first column.
@@ -221,11 +228,10 @@
 				td.appendChild(SELECT);
 			}
 			else {
-				// 2nd, 3rd and 4th column, will have textbox.
+				// 2nd, 3rd column, will have textbox.
 				let ele = document.createElement('input');
 				ele.setAttribute('type', 'text');
 				ele.setAttribute('value', '');
-
 				td.appendChild(ele);
 			}
 		}
