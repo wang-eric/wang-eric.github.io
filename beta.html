@@ -12,7 +12,11 @@
 
 	<!-- Bootstrap Icons CSS file <link rel="stylesheet" href="./icon.css">-->
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.4/font/bootstrap-icons.css">
-	
+	<style>
+		.custom-width {
+			width: 100%;
+		}
+	 </style>
   </head>
   <body>
     <div class="container-fluid d-flex justify-content-center align-items-center" style="height: 100vh;">
@@ -90,7 +94,7 @@
 	  removeCell.innerHTML = "<button type='button' class='btn btn-danger' onclick='removeRow(this)'><i class='bi bi-trash'></i></button>"
 	  itemCell.innerHTML = "<input type='text' class='form-control'>";
 	  priceCell.innerHTML = "<input type='number' class='form-control' step='0.01' min='0'>";
-	  buyerCell.innerHTML = "<select class='form-control' id='buyer'><option selected disabled>Select buyer</option><option>Idy</option><option>Susan</option><option>Sunny</option><option>Patty</option><option>Other</option></select>";
+	  buyerCell.innerHTML = "<select class='form-control custom-width' id='buyer'><option selected disabled>Select buyer</option><option>Idy</option><option>Susan</option><option>Sunny</option><option>Patty</option><option>Other</option></select>";
 	}
 
 	// now, add a new row to the TABLE.
