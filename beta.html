@@ -6,7 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700" rel="stylesheet">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.4.1/css/all.css" integrity="sha384-5sAR7xN1Nv6T6+dT2mhtzEpVJvfS3NScPQTrOxhwjIuvcA67KV2R5Jz6kr4abQsz" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"> -->
+	<!-- Bootstrap CSS file -->
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-alpha1/css/bootstrap.min.css" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1s1E/Dh&IxO6PvLYa0bzT6+MksV9AjI" crossorigin="anonymous">
+
+	<!-- Bootstrap Icons CSS file <link rel="stylesheet" href="./icon.css">-->
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.4/font/bootstrap-icons.css">
+	
   </head>
   <body>
     <div class="container-fluid d-flex justify-content-center align-items-center" style="height: 100vh;">
@@ -79,7 +85,9 @@
 	  var buyerCell = newRow.insertCell(3);
 
 	  // Add some text to the new cells
-	  removeCell.innerHTML = "<button type='button' class='btn btn-primary' onclick='removeRow(this)'>-</button>";
+	  //removeCell.innerHTML = "<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' class='bi bi-x-lg' viewBox='0 0 16 16'><path d='M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293 5.354 4.646z''/></svg>"
+	  //removeCell.innerHTML = "<button type='button' class='btn btn-primary' onclick='removeRow(this)'><svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' class='bi bi-x-lg' viewBox='0 0 16 16'><path d='M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z'/></svg></button>";
+	  removeCell.innerHTML = "<button type='button' class='btn btn-danger' onclick='removeRow(this)'><i class='bi bi-trash'></i></button>"
 	  itemCell.innerHTML = "<input type='text' class='form-control'>";
 	  priceCell.innerHTML = "<input type='number' class='form-control' step='0.01' min='0'>";
 	  buyerCell.innerHTML = "<select class='form-control' id='buyer'><option selected disabled>Select buyer</option><option>Idy</option><option>Susan</option><option>Sunny</option><option>Patty</option><option>Other</option></select>";
