@@ -20,7 +20,7 @@
           </div>
           <div class="form-group">
             <label for="price">Price:</label>
-            <input type="text" class="form-control" id="price">
+            <input type="number" class="form-control" id="price">
           </div>
           <div class="form-group">
             <label for="buyer">Buyer:</label>
@@ -81,7 +81,7 @@
 	  // Add some text to the new cells
 	  removeCell.innerHTML = "<button type='button' class='btn btn-primary' onclick='removeRow(this)'>-</button>";
 	  itemCell.innerHTML = "<input type='text' class='form-control'>";
-	  priceCell.innerHTML = "<input type='text' class='form-control'>";
+	  priceCell.innerHTML = "<input type='number' class='form-control' step='0.01' min='0'>";
 	  buyerCell.innerHTML = "<select class='form-control' id='buyer'><option selected disabled>Select buyer</option><option>Idy</option><option>Susan</option><option>Sunny</option><option>Patty</option><option>Other</option></select>";
 	}
 
@@ -179,7 +179,7 @@
 		var item;
 		var price;
 		// loop through each row of the table.
-		for (row = 1; row < myTab.rows.length - 1; row++) {
+		for (row = 1; row < myTab.rows.length; row++) {
 			// loop through each cell in a row.
 			for (c = 0; c < myTab.rows[row].cells.length; c++) {  
 				let element = myTab.rows.item(row).cells[c];
