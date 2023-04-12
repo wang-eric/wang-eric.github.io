@@ -2,177 +2,95 @@
 <html>
   <head>
     <title>Shoppers Points Calculator</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700" rel="stylesheet">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.4.1/css/all.css" integrity="sha384-5sAR7xN1Nv6T6+dT2mhtzEpVJvfS3NScPQTrOxhwjIuvcA67KV2R5Jz6kr4abQsz" crossorigin="anonymous">
-    <style>
-      html, body {
-      display: flex;
-      justify-content: center;
-      height: 100%;
-      }
-      body, div, h1, form, input, p { 
-      padding: 0;
-      margin: 0;
-      outline: none;
-      font-family: Roboto, Arial, sans-serif;
-      font-size: 16px;
-      color: #666;
-      }
-      h1 {
-      padding: 10px 0;
-      font-size: 32px;
-      font-weight: 300;
-      text-align: center;
-      }
-      p {
-      font-size: 12px;
-      }
-      hr {
-      color: #a9a9a9;
-      opacity: 0.3;
-      }
-      .main-block {
-      max-width: 340px; 
-      min-height: 460px; 
-      padding: 10px 0;
-      margin: auto;
-      border-radius: 5px; 
-      border: solid 1px #ccc;
-      box-shadow: 1px 2px 5px rgba(0,0,0,.31); 
-      background: #ebebeb; 
-      }
-      form {
-      margin: 0 30px;
-      }
-      .account-type, .gender {
-      margin: 15px 0;
-      }
-      input[type=radio] {
-      display: none;
-      }
-      label#icon {
-      margin: 0;
-      border-radius: 5px 0 0 5px;
-      }
-      label.radio {
-      position: relative;
-      display: inline-block;
-      padding-top: 4px;
-      margin-right: 20px;
-      text-indent: 30px;
-      overflow: visible;
-      cursor: pointer;
-      }
-      label.radio:before {
-      content: "";
-      position: absolute;
-      top: 2px;
-      left: 0;
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background: #1c87c9;
-      }
-      label.radio:after {
-      content: "";
-      position: absolute;
-      width: 9px;
-      height: 4px;
-      top: 8px;
-      left: 4px;
-      border: 3px solid #fff;
-      border-top: none;
-      border-right: none;
-      transform: rotate(-45deg);
-      opacity: 0;
-      }
-      input[type=radio]:checked + label:after {
-      opacity: 1;
-      }
-      input[type=password] {
-      width: calc(100% - 57px);
-      height: 36px;
-      margin: 13px 0 0 -5px;
-      padding-left: 10px; 
-      border-radius: 0 5px 5px 0;
-      border: solid 1px #cbc9c9; 
-      box-shadow: 1px 2px 5px rgba(0,0,0,.09); 
-      background: #fff; 
-      }
-	  input[type=text],select{
-      width: calc(100% - 15px);
-      height: 36px;
-      margin: 0px 0 0 0px;
-      padding-left: 10px; 
-      border-radius: 5px 5px 5px 5px;
-      border: solid 1px #cbc9c9; 
-      box-shadow: 1px 2px 5px rgba(0,0,0,.09); 
-      background: #fff; 
-      }
-      input[type=password] {
-      margin-bottom: 15px;
-      }
-      #icon {
-      display: inline-block;
-      padding: 9.3px 15px;
-      box-shadow: 1px 2px 5px rgba(0,0,0,.09); 
-      background: #1c87c9;
-      color: #fff;
-      text-align: center;
-      }
-      .btn-block {
-      margin-top: 10px;
-      text-align: center;
-      }
-      button,input[type=button] {
-      width: 100%;
-      padding: 10px 0;
-      margin: 10px auto;
-      border-radius: 5px; 
-      border: none;
-      background: #1c87c9; 
-      font-size: 14px;
-      font-weight: 600;
-      color: #fff;
-      }
-	  
-      button:hover,input[type=button]:hover {
-      background: #26a9e0;
-      }
-    </style>
-	<script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+  </head>
+  <body>
+    <div class="container-fluid d-flex justify-content-center align-items-center" style="height: 100vh;">
+      <div class="main-block col-lg-4 col-md-6 col-sm-8 col-xs-12 p-0">
+        <h1 class="p-3 font-weight-light text-center">Shoppers Points Calculator</h1>
+        <hr class="mb-4">
+		<!-- <form> -->
+          <div class="form-group">
+            <label for="item">Item:</label>
+            <input type="text" class="form-control" id="item">
+          </div>
+          <div class="form-group">
+            <label for="price">Price:</label>
+            <input type="text" class="form-control" id="price">
+          </div>
+          <div class="form-group">
+            <label for="buyer">Buyer:</label>
+					<select class="form-control" id="buyer">
+						<option selected disabled>Select buyer</option>
+						<option>Idy</option>
+						<option>Susan</option>
+						<option>Sunny</option>
+						<option>Patty</option>
+						<option>Other</option>
+					</select>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block" onclick="addRow2()">Add Item</button>
+        <!-- </form> -->
+        <hr class="my-4">
+        <table class="table table-striped" id="itemTable">
+          <thead>
+            <tr>
+              <th scope="col"></th>
+              <th scope="col">Item</th>
+              <th scope="col">Price</th>
+              <th scope="col">Buyer</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Table rows will be generated dynamically using JavaScript -->
+          </tbody>
+        </table>
+        <hr class="my-4">
+        <div class="d-flex justify-content-end pr-3">
+          <button type="button" class="btn btn-primary" onclick="submit()">Calculate</button>
+        </div>
+		<div>
+		<p id='output'></p>
+		</div>
+      </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <script>
 	let arrHead = new Array();	// array for header.
 	arrHead = ['', 'Item', 'Price', 'Buyer'];
+	
+	function addRow2() {
+	  // Get a reference to the table
+	  var table = document.getElementById("itemTable");
+	  var tbody = table.querySelector('tbody');
+	  // Insert a new row at the end of the table
+	  var newRow = tbody.insertRow(-1);
 
-	// first create TABLE structure with the headers. 
-	let createTable = () => {
-		let empTable = document.createElement('table');
-		empTable.setAttribute('id', 'empTable'); // table id.
+	  // Insert a cell in the new row for each column
+	  var removeCell = newRow.insertCell(0);
+	  var itemCell = newRow.insertCell(1);
+	  var priceCell = newRow.insertCell(2);
+	  var buyerCell = newRow.insertCell(3);
 
-		let tr = empTable.insertRow(-1);
-		for (let h = 0; h < arrHead.length; h++) {
-			let th = document.createElement('th'); // create table headers	
-			if (h === 2){
-				th.setAttribute('width', '20%');
-			}
-			if (h === 3){
-				th.setAttribute('width', '28%');
-			}
-			th.innerHTML = arrHead[h];
-			tr.appendChild(th);
-		}
-
-		let div = document.getElementById('cont');
-		div.appendChild(empTable);  // add the TABLE to the container.
+	  // Add some text to the new cells
+	  removeCell.innerHTML = "<button type='button' class='btn btn-primary' onclick='removeRow(this)'>-</button>";
+	  itemCell.innerHTML = "<input type='text' class='form-control'>";
+	  priceCell.innerHTML = "<input type='text' class='form-control'>";
+	  buyerCell.innerHTML = "<select class='form-control' id='buyer'><option selected disabled>Select buyer</option><option>Idy</option><option>Susan</option><option>Sunny</option><option>Patty</option><option>Other</option></select>";
 	}
 
 	// now, add a new row to the TABLE.
 	let addRow = () => {
-		let empTab = document.getElementById('empTable');3
+		let iTable = document.getElementById('itemTable')
 
-		let rowCnt = empTab.rows.length;   // table row count.
-		let tr = empTab.insertRow(rowCnt); // the table row.
-		tr = empTab.insertRow(rowCnt);
+		let rowCnt = iTable.rows.length;   // table row count.
+		let tr = iTable.insertRow(rowCnt); // the table row.
 
 		for (let c = 0; c < arrHead.length; c++) {
 			let td = document.createElement('td'); // table definition.
@@ -181,11 +99,12 @@
 
 			if (c === 0) {      // the first column.
 				// add a button in every new row in the first column.
-				let button = document.createElement('input');
+				let button = document.createElement('button');
 
 				// set input attributes.
 				button.setAttribute('type', 'button');
-				button.setAttribute('value', '    -    ');
+				button.setAttribute('class', 'btn btn-primary');
+				button.setAttribute('value', '-');
 
 				// add button's 'onclick' event.
 				button.setAttribute('onclick', 'removeRow(this)');
@@ -194,6 +113,7 @@
 			}
 			else if (c === 3){
 				let SELECT = document.createElement('SELECT');
+				SELECT.setAttribute('class', 'form-control');
 				let OPT1 = document.createElement('OPTION');
 				let OPT2 = document.createElement('OPTION');
 				let OPT3 = document.createElement('OPTION');
@@ -231,6 +151,7 @@
 				// 2nd, 3rd column, will have textbox.
 				let ele = document.createElement('input');
 				ele.setAttribute('type', 'text');
+				ele.setAttribute('class', 'form-control');
 				ele.setAttribute('value', '');
 				td.appendChild(ele);
 			}
@@ -239,14 +160,14 @@
 
 	// delete TABLE row function.
 	let removeRow = (oButton) => {
-		let empTab = document.getElementById('empTable');
+		let empTab = document.getElementById('itemTable');
 		empTab.deleteRow(oButton.parentNode.parentNode.rowIndex); 
 		// button -> td -> tr.
 	}
 
 	// function to extract and submit table data.
 	let submit = () => {
-		let myTab = document.getElementById('empTable');
+		let myTab = document.getElementById('itemTable');
 		let arrValues = new Array();
 		let output_string;
 		let idy_total = 0;
@@ -381,55 +302,6 @@
 		}
 		return n;
 	}
-	</script>
-  </head>
-<body onload="createTable()">
-    <div class="main-block">
-      <h1>Shoppers Calculator</h1>
-      <!-- <form action="/">
-        <hr>
-        <div class="account-type">
-          <input type="radio" value="none" id="radioOne" name="account" checked/>
-          <label for="radioOne" class="radio">Personal</label>
-          <input type="radio" value="none" id="radioTwo" name="account" />
-          <label for="radioTwo" class="radio">Company</label>
-        </div>
-        <hr>
-        <label id="icon" for="name"><i class="fas fa-envelope"></i></label>
-        <input type="text" name="name" id="name" placeholder="Email" required/>
-        <label id="icon" for="name"><i class="fas fa-user"></i></label>
-        <input type="text" name="name" id="name" placeholder="Name" required/>
-        <label id="icon" for="name"><i class="fas fa-unlock-alt"></i></label>
-        <input type="password" name="name" id="name" placeholder="Password" required/>
-        <hr>
-        <div class="gender">
-          <input type="radio" value="none" id="male" name="gender" checked/>
-          <label for="male" class="radio">Male</label>
-          <input type="radio" value="none" id="female" name="gender" />
-          <label for="female" class="radio">Female</label>
-        </div>
-        <hr>
-        <div class="btn-block">
-          <p>By clicking Register, you agree on our <a href="https://www.w3docs.com/privacy-policy">Privacy Policy for W3Docs</a>.</p>
-          <button type="submit" href="/">Submit</button>
-        </div>
-      </form> -->
-		<p class="btn-block">
-			Click the "Add New Row" button to add a new row to the table. <br> Enter values in each row and press the "Submit Data" button.
-		  </p>
-			
-		<p>
-		<input class="account-type" type="button" id="addRow" value="Add New Row" onclick="addRow()" />
-		</p>
-
-		<div id="cont"></div>  <!-- the container to add the TABLE -->
-
-		<p>
-		<input type="button" id="bt" value="Calculate" onclick="submit()" />
-		
-		</p>
-			
-		<p id='output'></p>
-	</div>
+    </script>
   </body>
-</html>
+</html> 
