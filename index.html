@@ -2,47 +2,47 @@
 <html>
   <head>
     <title>Shoppers Points Calculator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700" rel="stylesheet">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.4.1/css/all.css" integrity="sha384-5sAR7xN1Nv6T6+dT2mhtzEpVJvfS3NScPQTrOxhwjIuvcA67KV2R5Jz6kr4abQsz" crossorigin="anonymous">
     <style>
       html, body {
-      display: flex;
-      justify-content: center;
-      height: 100%;
-      }
-      body, div, h1, form, input, p { 
-      padding: 0;
+      width: 100%;
+      min-height: 100%;
       margin: 0;
-      outline: none;
+      padding: 0;
       font-family: Roboto, Arial, sans-serif;
       font-size: 16px;
       color: #666;
       }
       h1 {
       padding: 10px 0;
-      font-size: 32px;
+      font-size: 28px;
       font-weight: 300;
       text-align: center;
       }
       p {
-      font-size: 12px;
+      font-size: 14px;
+      line-height: 1.4;
       }
       hr {
       color: #a9a9a9;
       opacity: 0.3;
       }
       .main-block {
-      max-width: 340px; 
+      width: 100%;
+      max-width: 500px;
       min-height: 460px; 
-      padding: 10px 0;
-      margin: auto;
+      padding: 10px;
+      margin: 0 auto;
+      box-sizing: border-box;
       border-radius: 5px; 
       border: solid 1px #ccc;
       box-shadow: 1px 2px 5px rgba(0,0,0,.31); 
       background: #ebebeb; 
       }
       form {
-      margin: 0 30px;
+      margin: 0 15px;
       }
       .account-type, .gender {
       margin: 15px 0;
@@ -99,7 +99,7 @@
       box-shadow: 1px 2px 5px rgba(0,0,0,.09); 
       background: #fff; 
       }
-	  input[type=text],select{
+      input[type=text],select{
       width: calc(100% - 15px);
       height: 36px;
       margin: 0px 0 0 0px;
@@ -135,273 +135,332 @@
       font-weight: 600;
       color: #fff;
       }
-	  
+      
       button:hover,input[type=button]:hover {
       background: #26a9e0;
       }
+      
+      /* Table styles for mobile */
+      #empTable {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 10px 0;
+      }
+      
+      #empTable th, #empTable td {
+        padding: 8px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+      }
+      
+      #empTable th {
+        background-color: #1c87c9;
+        color: white;
+      }
+      
+      #empTable tr:nth-child(even) {
+        background-color: #f2f2f2;
+      }
+      
+      #empTable input[type=text], #empTable select {
+        width: 100%;
+        box-sizing: border-box;
+      }
+      
+      /* Links styling */
+      .links {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin: 10px 0;
+      }
+      
+      .links a {
+        color: #1c87c9;
+        text-decoration: none;
+        text-align: center;
+        padding: 5px;
+        background: #fff;
+        border-radius: 5px;
+      }
+      
+      .links a:hover {
+        background: #f0f0f0;
+      }
+      
+      /* Output styling */
+      #output table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 10px 0;
+      }
+      
+      #output table td {
+        padding: 8px;
+        border-bottom: 1px solid #ddd;
+      }
+      
+      #output h3 {
+        margin: 15px 0 10px 0;
+      }
     </style>
-	<script>
-	let arrHead = new Array();	// array for header.
-	arrHead = ['', 'Item', 'Price', 'Buyer'];
+    <script>
+    // Define the table headers
+    let arrHead = new Array();    // array for header.
+    // Add "Tax" column between "Item" and "Price"
+    arrHead = ['', 'Item', 'Tax', 'Price', 'Buyer'];
 
-	// first create TABLE structure with the headers. 
-	let createTable = () => {
-		let empTable = document.createElement('table');
-		empTable.setAttribute('id', 'empTable'); // table id.
+    // Define tax rate as a variable
+    const TAX_RATE = 0.13; // 13% tax
 
-		let tr = empTable.insertRow(-1);
-		for (let h = 0; h < arrHead.length; h++) {
-			let th = document.createElement('th'); // create table headers	
-			if (h === 2){
-				th.setAttribute('width', '20%');
-			}
-			if (h === 3){
-				th.setAttribute('width', '28%');
-			}
-			th.innerHTML = arrHead[h];
-			tr.appendChild(th);
-		}
+    // Function to create the initial table structure with headers
+    let createTable = () => {
+        let empTable = document.createElement('table');
+        empTable.setAttribute('id', 'empTable'); // table id.
 
-		let div = document.getElementById('cont');
-		div.appendChild(empTable);  // add the TABLE to the container.
-	}
+        let tr = empTable.insertRow(-1);
+        for (let h = 0; h < arrHead.length; h++) {
+            let th = document.createElement('th'); // create table headers    
+            if (h === 3){
+                th.setAttribute('width', '20%');
+            }
+            if (h === 4){
+                th.setAttribute('width', '28%');
+            }
+            th.innerHTML = arrHead[h];
+            tr.appendChild(th);
+        }
 
-	// now, add a new row to the TABLE.
-	let addRow = () => {
-		let empTab = document.getElementById('empTable');3
+        let div = document.getElementById('cont');
+        div.appendChild(empTable);  // add the TABLE to the container.
+    }
 
-		let rowCnt = empTab.rows.length;   // table row count.
-		let tr = empTab.insertRow(rowCnt); // the table row.
-		tr = empTab.insertRow(rowCnt);
+    // Function to add a new row to the table
+    let addRow = () => {
+        let empTab = document.getElementById('empTable');
 
-		for (let c = 0; c < arrHead.length; c++) {
-			let td = document.createElement('td'); // table definition.
+        let rowCnt = empTab.rows.length;   // table row count.
+        let tr = empTab.insertRow(rowCnt); // the table row.
 
-			td = tr.insertCell(c);
+        for (let c = 0; c < arrHead.length; c++) {
+            let td = document.createElement('td'); // table definition.
 
-			if (c === 0) {      // the first column.
-				// add a button in every new row in the first column.
-				let button = document.createElement('input');
+            td = tr.insertCell(c);
 
-				// set input attributes.
-				button.setAttribute('type', 'button');
-				button.setAttribute('value', '    -    ');
+            if (c === 0) {      // the first column.
+                // Add a button in every new row in the first column for row removal
+                let button = document.createElement('input');
+                button.setAttribute('type', 'button');
+                button.setAttribute('value', '    -    ');
+                button.setAttribute('onclick', 'removeRow(this)');
+                td.appendChild(button);
+            }
+            else if (c === 2) { // Tax checkbox column
+                let checkbox = document.createElement('input');
+                checkbox.setAttribute('type', 'checkbox');
+                checkbox.checked = true; // checked by default
+                td.appendChild(checkbox);
+            }
+            else if (c === 4){
+                // Create a dropdown for selecting the buyer
+                let SELECT = document.createElement('SELECT');
+                let OPT1 = document.createElement('OPTION');
+                let OPT2 = document.createElement('OPTION');
+                let OPT3 = document.createElement('OPTION');
+                let OPT4 = document.createElement('OPTION');
+                let OPT5 = document.createElement('OPTION');
+                
+                OPT1.setAttribute('value', 'Idy');
+                OPT2.setAttribute('value', 'Susan');
+                OPT3.setAttribute('value', 'Sunny');
+                OPT4.setAttribute('value', 'Patty');
+                OPT5.setAttribute('value', 'Other');
+                OPT1.setAttribute('selected', 'selected');
 
-				// add button's 'onclick' event.
-				button.setAttribute('onclick', 'removeRow(this)');
-				
-				td.appendChild(button);
-			}
-			else if (c === 3){
-				let SELECT = document.createElement('SELECT');
-				let OPT1 = document.createElement('OPTION');
-				let OPT2 = document.createElement('OPTION');
-				let OPT3 = document.createElement('OPTION');
-				let OPT4 = document.createElement('OPTION');
-				let OPT5 = document.createElement('OPTION');
-				
-				
-				OPT1.setAttribute('value', 'Idy');
-				OPT2.setAttribute('value', 'Susan');
-				OPT3.setAttribute('value', 'Sunny');
-				OPT4.setAttribute('value', 'Patty');
-				OPT5.setAttribute('value', 'Other');
-				OPT1.setAttribute('selected', 'selected');
-				//OPT2.setAttribute('value', 0);
-				//OPT2.setAttribute('selected', 'selected');
-				// also you can set use .selected as a property 
-				// OPT2.selected = true;
+                OPT1.appendChild( document.createTextNode( 'Idy' ) );
+                OPT2.appendChild( document.createTextNode( 'Susan' ) );
+                OPT3.appendChild( document.createTextNode( 'Sunny' ) );
+                OPT4.appendChild( document.createTextNode( 'Patty' ) );
+                OPT5.appendChild( document.createTextNode( 'Other' ) );
 
-				OPT1.appendChild( document.createTextNode( 'Idy' ) );
-				OPT2.appendChild( document.createTextNode( 'Susan' ) );
-				OPT3.appendChild( document.createTextNode( 'Sunny' ) );
-				OPT4.appendChild( document.createTextNode( 'Patty' ) );
-				OPT5.appendChild( document.createTextNode( 'Other' ) );
+                SELECT.appendChild(OPT1);
+                SELECT.appendChild(OPT2);
+                SELECT.appendChild(OPT3);
+                SELECT.appendChild(OPT4);
+                SELECT.appendChild(OPT5);
 
-				SELECT.appendChild(OPT1);
-				SELECT.appendChild(OPT2);
-				SELECT.appendChild(OPT3);
-				SELECT.appendChild(OPT4);
-				SELECT.appendChild(OPT5);
+                td.appendChild(SELECT);
+            }
+            else {
+                // Item and Price columns: add textboxes
+                let ele = document.createElement('input');
+                ele.setAttribute('type', 'text');
+                ele.setAttribute('value', '');
+                td.appendChild(ele);
+            }
+        }
+    }
 
+    // Function to delete a table row
+    let removeRow = (oButton) => {
+        let empTab = document.getElementById('empTable');
+        empTab.deleteRow(oButton.parentNode.parentNode.rowIndex); 
+        // button -> td -> tr.
+    }
 
-				td.appendChild(SELECT);
-			}
-			else {
-				// 2nd, 3rd column, will have textbox.
-				let ele = document.createElement('input');
-				ele.setAttribute('type', 'text');
-				ele.setAttribute('value', '');
-				td.appendChild(ele);
-			}
-		}
-	}
+    // Function to extract and process table data, then display the results
+    let submit = () => {
+    let myTab = document.getElementById('empTable');
+    let arrValues = new Array();
+    let output_string;
+    let idy_total = 0, idy_total_no_tax = 0;
+    let sunny_total = 0, sunny_total_no_tax = 0;
+    let susan_total = 0, susan_total_no_tax = 0;
+    let patty_total = 0, patty_total_no_tax = 0;
+    let other_total = 0, other_total_no_tax = 0;
+    var buyer;
+    var item;
+    var price;
+    var includeTax;
+    // Loop through each row of the table (skip header and last empty row)
+    for (row = 1; row < myTab.rows.length; row++) {
+        for (c = 0; c < myTab.rows[row].cells.length; c++) {  
+            let element = myTab.rows.item(row).cells[c];
+            switch (c) { 
+                case 1:
+                    item = element.childNodes[0].value;
+                    break;
+                case 2:
+                    includeTax = element.childNodes[0].checked;
+                    break;
+                case 3:
+                    price = Number(element.childNodes[0].value);
+                    break;
+                case 4:
+                    buyer = element.childNodes[0].value;
+                    break;
+            }
+        }
+        let finalPrice = includeTax ? price * (1 + TAX_RATE) : price;
+        switch (buyer) { 
+            case "Idy":
+                idy_total += finalPrice;
+                idy_total_no_tax += price;
+                break;
+            case "Sunny":
+                sunny_total += finalPrice;
+                sunny_total_no_tax += price;
+                break;
+            case "Susan":
+                susan_total += finalPrice;
+                susan_total_no_tax += price;
+                break;
+            case "Patty":
+                patty_total += finalPrice;
+                patty_total_no_tax += price;
+                break;
+            case "Other":
+                other_total += finalPrice;
+                other_total_no_tax += price;
+                break;
+        }
+        buyer = "";
+        price = 0;
+        includeTax = true;
+    }
 
-	// delete TABLE row function.
-	let removeRow = (oButton) => {
-		let empTab = document.getElementById('empTable');
-		empTab.deleteRow(oButton.parentNode.parentNode.rowIndex); 
-		// button -> td -> tr.
-	}
+    // Output before points discount
+    output_string = "<hr><h3>" + "Total" + "</h3>";
+    output_string = output_string + "<table>";
+    if (idy_total>0){
+        output_string = output_string + "<tr><td>" + "Idy Total:" + "</td><td>$"+ roundTo(idy_total,2) + "</td></tr>";
+    }
+    if (sunny_total>0){
+        output_string = output_string + "<tr><td>" + "Sunny Total:" + "</td><td>$" + roundTo(sunny_total,2) + "</td></tr>";
+    }
+    if (susan_total>0){
+        output_string = output_string + "<tr><td>" + "Susan Total:" + "</td><td>$" + roundTo(susan_total,2) + "</td></tr>";
+    }
+    if (patty_total>0){
+        output_string = output_string + "<tr><td>" + "Patty Total:" + "</td><td>$" + roundTo(patty_total,2) + "</td></tr>";
+    }
+    if (other_total>0){
+        output_string = output_string + "<tr><td>" + "Other Total:" + "</td><td>$" + roundTo(other_total,2) + "</td></tr>";
+    }
+    output_string = output_string + "</table>";
 
-	// function to extract and submit table data.
-	let submit = () => {
-		let myTab = document.getElementById('empTable');
-		let arrValues = new Array();
-		let output_string;
-		let idy_total = 0;
-		let sunny_total = 0;
-		let susan_total = 0;
-		let patty_total = 0;
-		let other_total = 0;
-		var buyer;
-		var item;
-		var price;
-		// loop through each row of the table.
-		for (row = 1; row < myTab.rows.length - 1; row++) {
-			// loop through each cell in a row.
-			for (c = 0; c < myTab.rows[row].cells.length; c++) {  
-				let element = myTab.rows.item(row).cells[c];
-				switch (c) { 
-					case 1:
-						item = element.childNodes[0].value;
-						break;
-					case 2:
-						price = Number(element.childNodes[0].value);
-						break;
-					case 3:
-						buyer = element.childNodes[0].value;
-						break;
-				}
-				//arrValues.push("'" + c +element.childNodes[0].value + "'");
-			}
-		
-			switch (buyer) { 
-				case "Idy":
-					idy_total = idy_total + price;
-					break;
-				case "Sunny":
-					sunny_total = sunny_total + price;
-					break;
-				case "Susan":
-					susan_total = susan_total + price;
-					break;
-				case "Patty":
-					patty_total = patty_total + price;
-					break;
-				case "Other":
-					other_total = other_total + price;
-					break;
-			}
-			buyer = ""
-			price = 0
-		}
-		
-		output_string = "<hr><h3>" + "Before Tax" + "</h3>";
-		output_string = output_string + "<table>";
-		if (idy_total>0){
-		output_string = output_string + "<tr><td>" + "Idy Total:" + "</td><td>$"+ roundTo(idy_total,2) + "</td></tr>";
-		}
-		if (sunny_total>0){
-		output_string = output_string + "<tr><td>" + "Sunny Total:" + "</td><td>$" + roundTo(sunny_total,2) + "</td></tr>";
-		}
-		if (susan_total>0){
-		output_string = output_string + "<tr><td>" + "Susan Total:" + "</td><td>$" + roundTo(susan_total,2) + "</td></tr>";
-		}
-		if (patty_total>0){
-		output_string = output_string + "<tr><td>" + "Patty Total:" + "</td><td>$" + roundTo(patty_total,2) + "</td></tr>";
-		}
-		if (other_total>0){
-		output_string = output_string + "<tr><td>" + "Other Total:" + "</td><td>$" + roundTo(other_total,2) + "</td></tr>";
-		}
-		output_string = output_string + "</table>";
-		
-		output_string = output_string + "<hr><h3>" + "After Tax" + "</h3>";
-		output_string = output_string + "<table>";
-		if (idy_total>0){
-		output_string = output_string + "<tr><td>" + "Idy Total:" + "</td><td>$"+ roundTo(idy_total * 1.13,2) + "</td></tr>";
-		}
-		if (sunny_total>0){
-		output_string = output_string + "<tr><td>" + "Sunny Total:" + "</td><td>$" + roundTo(sunny_total * 1.13,2) + "</td></tr>";
-		}
-		if (susan_total>0){
-		output_string = output_string + "<tr><td>" + "Susan Total:" + "</td><td>$" + roundTo(susan_total * 1.13,2) + "</td></tr>";
-		}
-		if (patty_total>0){
-		output_string = output_string + "<tr><td>" + "Patty Total:" + "</td><td>$" + roundTo(patty_total * 1.13,2) + "</td></tr>";
-		}
-		if (other_total>0){
-		output_string = output_string + "<tr><td>" + "Other Total:" + "</td><td>$" + roundTo(other_total * 1.13,2) + "</td></tr>";
-		}
-		output_string = output_string + "</table>";
-		
-		idy_total = roundTo(idy_total * 1.13 - idy_total * 15 * 20 / 1000,2)
-		sunny_total = roundTo(sunny_total * 1.13 - sunny_total * 15 * 20 / 1000,2)
-		susan_total = roundTo(susan_total * 1.13 - susan_total * 15 * 20 / 1000,2)
-		patty_total = roundTo(patty_total * 1.13 - patty_total * 15 * 20 / 1000,2)
-		other_total = roundTo(other_total * 1.13 - other_total * 15 * 20 / 1000,2)
-		
-		output_string = output_string + "<hr><h3>" + "After Points Discount" + "</h3>";
-		output_string = output_string + "<table>";
-		if (idy_total>0){
-		output_string = output_string + "<tr><td>" + "Idy Total:" + "</td><td>$"+ idy_total + "</td></tr>";
-		}
-		if (sunny_total>0){
-		output_string = output_string + "<tr><td>" + "Sunny Total:" + "</td><td>$"+ sunny_total + "</td></tr>";
-		}
-		if (susan_total>0){
-		output_string = output_string + "<tr><td>" + "Susan Total:" + "</td><td>$"+ susan_total + "</td></tr>";
-		}
-		if (patty_total>0){
-		output_string = output_string + "<tr><td>" + "Patty Total:" + "</td><td>$"+ patty_total + "</td></tr>";
-		}
-		if (other_total>0){
-		output_string = output_string + "<tr><td>" + "Other Total:" + "</td><td>$"+ other_total + "</td></tr>";
-		}
-		output_string = output_string + "</table>";
-		
-		// The final output.
-		document.getElementById('output').innerHTML = output_string;
-		//console.log (arrValues);   // you can see the array values in your browsers console window. Thanks :-) 
-	}
-	function roundTo(n, digits) {
-		var negative = false;
-		if (digits === undefined) {
-			digits = 0;
-		}
-		if (n < 0) {
-			negative = true;
-			n = n * -1;
-		}
-		var multiplicator = Math.pow(10, digits);
-		n = parseFloat((n * multiplicator).toFixed(11));
-		n = (Math.round(n) / multiplicator).toFixed(digits);
-		if (negative) {
-			n = (n * -1).toFixed(digits);
-		}
-		return n;
-	}
-	</script>
+    // Apply points discount: total = roundTo(buyer_total - buyer_total_no_tax * 15 * 20 / 100, 2)
+    idy_total_after = roundTo(idy_total - idy_total_no_tax * 15 * 20 / 1000, 2);
+    sunny_total_after = roundTo(sunny_total - sunny_total_no_tax * 15 * 20 / 1000, 2);
+    susan_total_after = roundTo(susan_total - susan_total_no_tax * 15 * 20 / 1000, 2);
+    patty_total_after = roundTo(patty_total - patty_total_no_tax * 15 * 20 / 1000, 2);
+    other_total_after = roundTo(other_total - other_total_no_tax * 15 * 20 / 1000, 2);
+
+    // Output after points discount
+    output_string = output_string + "<hr><h3>" + "After Points Discount" + "</h3>";
+    output_string = output_string + "<table>";
+    if (parseFloat(idy_total_after) > 0){
+        output_string = output_string + "<tr><td>" + "Idy Total:" + "</td><td>$"+ idy_total_after + "</td></tr>";
+    }
+    if (parseFloat(sunny_total_after) > 0){
+        output_string = output_string + "<tr><td>" + "Sunny Total:" + "</td><td>$"+ sunny_total_after + "</td></tr>";
+    }
+    if (parseFloat(susan_total_after) > 0){
+        output_string = output_string + "<tr><td>" + "Susan Total:" + "</td><td>$"+ susan_total_after + "</td></tr>";
+    }
+    if (parseFloat(patty_total_after) > 0){
+        output_string = output_string + "<tr><td>" + "Patty Total:" + "</td><td>$"+ patty_total_after + "</td></tr>";
+    }
+    if (parseFloat(other_total_after) > 0){
+        output_string = output_string + "<tr><td>" + "Other Total:" + "</td><td>$"+ other_total_after + "</td></tr>";
+    }
+    output_string = output_string + "</table>";
+
+    document.getElementById('output').innerHTML = output_string;
+    }
+
+    // Helper function to round numbers to a specified number of digits
+    function roundTo(n, digits) {
+        var negative = false;
+        if (digits === undefined) {
+            digits = 0;
+        }
+        if (n < 0) {
+            negative = true;
+            n = n * -1;
+        }
+        var multiplicator = Math.pow(10, digits);
+        n = parseFloat((n * multiplicator).toFixed(11));
+        n = (Math.round(n) / multiplicator).toFixed(digits);
+        if (negative) {
+            n = (n * -1).toFixed(digits);
+        }
+        return n;
+    }
+    </script>
   </head>
 <body onload="createTable()">
     <div class="main-block">
       <h1>Shoppers Calculator</h1>
-		<p class="btn-block">
-			Click the "Add New Row" button to add a new row to the table. <br> Enter values in each row and press the "Calculate" button.
-		  </p>
-		<a href="./beta.html">New Version (Workin in Progress)</a>
-		<p>
-		<input class="account-type" type="button" id="addRow" value="Add New Row" onclick="addRow()" />
-		</p>
+        <p class="btn-block">
+            Click the "Add New Row" button to add a new row to the table. <br> Enter values in each row and press the "Calculate" button.
+          </p>
+        <div class="links">
+            <a href="./beta.html">New Version (Work in Progress)</a>
+            <a href="./amazon_review_tracker.html">Amazon Review Tracker</a>
+        </div>
+        <p>
+        <input class="account-type" type="button" id="addRow" value="Add New Row" onclick="addRow()" />
+        </p>
 
-		<div id="cont"></div>  <!-- the container to add the TABLE -->
+        <div id="cont"></div>  <!-- the container to add the TABLE -->
 
-		<p>
-		<input type="button" id="bt" value="Calculate" onclick="submit()" />
-		
-		</p>
-			
-		<p id='output'></p>
-	</div>
+        <p>
+        <input type="button" id="bt" value="Calculate" onclick="submit()" />
+        
+        </p>
+            
+        <p id='output'></p>
+    </div>
   </body>
 </html>
