@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Shoppers Points Calculator V2</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+
+:root{
+  --primary:#e11d48;
+  --primary-dark:#be123c;
+  --primary-light:#fff1f2;
+
+  --success:#10b981;
+  --danger:#ef4444;
+
+  --bg:#f8fafc;
+  --card:#ffffff;
+
+  --text:#0f172a;
+  --text-light:#64748b;
+
+  --border:#e2e8f0;
+
+  --shadow-sm:
+    0 2px 10px rgba(15,23,42,.06);
+
+  --shadow-md:
+    0 8px 24px rgba(15,23,42,.08);
+
+  --shadow-lg:
+    0 20px 60px rgba(15,23,42,.12);
+}
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+
+html{
+  scroll-behavior:smooth;
+}
+
+body{
+  font-family:'Inter',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  padding:24px;
+  overflow-x:hidden;
+}
+
+/* Background effects */
+
+body::before{
+  content:"";
+  position:fixed;
+  width:500px;
+  height:500px;
+  right:-200px;
+  top:-200px;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(225,29,72,.15),
+      transparent 70%
+    );
+
+  pointer-events:none;
+  z-index:-1;
+}
+
+body::after{
+  content:"";
+  position:fixed;
+  width:400px;
+  height:400px;
+  left:-150px;
+  bottom:-150px;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(244,63,94,.12),
+      transparent 70%
+    );
+
+  pointer-events:none;
+  z-index:-1;
+}
+
+/* Layout */
+
+.container{
+  max-width:1100px;
+  margin:0 auto;
+}
+
+.hero{
+  background:
+    linear-gradient(
+      135deg,
+      #e11d48,
+      #fb7185
+    );
+
+  color:white;
+
+  border-radius:28px;
+
+  padding:42px;
+
+  box-shadow:
+    0 20px 40px rgba(225,29,72,.25);
+
+  margin-bottom:24px;
+}
+
+.hero h1{
+  font-size:42px;
+  font-weight:800;
+  margin-bottom:12px;
+}
+
+.hero p{
+  font-size:18px;
+  opacity:.95;
+  line-height:1.6;
+}
+
+/* Stats */
+
+.stats{
+  display:grid;
+  grid-template-columns:
+    repeat(
+      auto-fit,
+      minmax(220px,1fr)
+    );
+
+  gap:18px;
+  margin-bottom:24px;
+}
+
+.stat-card{
+  background:white;
+  border-radius:24px;
+  padding:24px;
+
+  box-shadow:var(--shadow-md);
+}
+
+.stat-label{
+  color:var(--text-light);
+  font-size:14px;
+  font-weight:600;
+  margin-bottom:12px;
+}
+
+.stat-value{
+  font-size:34px;
+  font-weight:800;
+}
+
+/* Main Card */
+
+.main-card{
+  background:white;
+  border-radius:28px;
+  padding:30px;
+
+  box-shadow:var(--shadow-lg);
+}
+
+/* Top actions */
+
+.top-actions{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:16px;
+
+  margin-bottom:28px;
+}
+
+.section-title{
+  font-size:24px;
+  font-weight:700;
+}
+
+.action-group{
+  display:flex;
+  gap:12px;
+}
+
+/* Buttons */
+
+.btn{
+  border:none;
+  cursor:pointer;
+  transition:.2s;
+  font-weight:700;
+}
+
+.btn:hover{
+  transform:translateY(-2px);
+}
+
+.btn-primary{
+  background:
+    linear-gradient(
+      135deg,
+      #e11d48,
+      #fb7185
+    );
+
+  color:white;
+
+  padding:14px 24px;
+
+  border-radius:16px;
+
+  box-shadow:
+    0 10px 20px rgba(225,29,72,.20);
+}
+
+.btn-secondary{
+  background:#f1f5f9;
+  color:#334155;
+
+  padding:14px 24px;
+  border-radius:16px;
+}
+
+/* Item Cards */
+
+#itemContainer{
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+}
+
+.purchase-card{
+  border:1px solid var(--border);
+  border-radius:24px;
+  padding:22px;
+
+  background:white;
+
+  transition:.2s;
+}
+
+.purchase-card:hover{
+  box-shadow:var(--shadow-md);
+}
+
+.card-grid{
+  display:grid;
+  grid-template-columns:
+    2fr
+    1fr
+    1fr
+    1fr
+    auto;
+
+  gap:14px;
+  align-items:end;
+}
+
+.field{
+  display:flex;
+  flex-direction:column;
+}
+
+.field label{
+  font-size:13px;
+  font-weight:600;
+  color:var(--text-light);
+  margin-bottom:8px;
+}
+
+.field input,
+.field select{
+  height:48px;
+
+  border:1px solid var(--border);
+
+  border-radius:14px;
+
+  padding:0 14px;
+
+  font-size:15px;
+  font-family:inherit;
+}
+
+.field input:focus,
+.field select:focus{
+  outline:none;
+  border-color:var(--primary);
+}
+/* Checkbox */
+
+.tax-box{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  height:48px;
+}
+
+.tax-box input{
+  width:18px;
+  height:18px;
+}
+
+.tax-box span{
+  font-size:14px;
+  font-weight:500;
+}
+
+/* Delete button */
+
+.delete-btn{
+  width:48px;
+  height:48px;
+
+  border:none;
+  border-radius:14px;
+
+  background:#fef2f2;
+  color:#dc2626;
+
+  font-size:18px;
+  font-weight:700;
+
+  cursor:pointer;
+
+  transition:.2s;
+}
+
+.delete-btn:hover{
+  background:#fee2e2;
+  transform:scale(1.05);
+}
+
+/* Calculate Section */
+
+.calculate-section{
+  margin-top:28px;
+  display:flex;
+  justify-content:center;
+}
+
+.calculate-btn{
+  min-width:260px;
+  height:58px;
+
+  font-size:17px;
+  font-weight:700;
+}
+
+/* Results */
+
+.results-section{
+  margin-top:36px;
+}
+
+.results-title{
+  font-size:24px;
+  font-weight:700;
+  margin-bottom:18px;
+}
+
+.result-card{
+  background:white;
+
+  border:1px solid var(--border);
+
+  border-radius:18px;
+
+  padding:18px 20px;
+
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+
+  margin-bottom:12px;
+}
+
+.result-left{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+
+.result-name{
+  font-size:18px;
+  font-weight:700;
+}
+
+.result-saving{
+  color:var(--success);
+  font-size:14px;
+  font-weight:600;
+}
+
+.result-total{
+  font-size:22px;
+  font-weight:800;
+}
+
+/* Navigation Links */
+
+.links{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  gap:14px;
+  margin-bottom:28px;
+}
+
+.links a{
+  text-decoration:none;
+
+  background:white;
+
+  padding:18px;
+
+  border-radius:18px;
+
+  border:1px solid var(--border);
+
+  color:var(--text);
+
+  font-weight:600;
+
+  transition:.2s;
+
+  box-shadow:var(--shadow-sm);
+}
+
+.links a:hover{
+  transform:translateY(-3px);
+  box-shadow:var(--shadow-md);
+}
+
+/* Modal */
+
+.modal-overlay{
+  position:fixed;
+  inset:0;
+
+  background:rgba(15,23,42,.5);
+
+  display:none;
+
+  align-items:center;
+  justify-content:center;
+
+  z-index:9999;
+
+  padding:20px;
+}
+
+.modal{
+  background:white;
+
+  width:100%;
+  max-width:420px;
+
+  border-radius:24px;
+
+  padding:24px;
+
+  box-shadow:var(--shadow-lg);
+}
+
+.modal-title{
+  font-size:22px;
+  font-weight:700;
+
+  margin-bottom:10px;
+}
+
+.modal-text{
+  color:var(--text-light);
+  margin-bottom:18px;
+}
+
+.modal-input{
+  width:100%;
+
+  height:52px;
+
+  border:1px solid var(--border);
+
+  border-radius:14px;
+
+  padding:0 14px;
+
+  font-size:15px;
+}
+
+.modal-input:focus{
+  outline:none;
+  border-color:var(--primary);
+}
+
+.modal-error{
+  color:#dc2626;
+  font-size:13px;
+  min-height:20px;
+  margin-top:8px;
+}
+
+.modal-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+
+  margin-top:18px;
+}
+
+.modal-btn{
+  border:none;
+
+  border-radius:14px;
+
+  padding:12px 18px;
+
+  cursor:pointer;
+
+  font-weight:700;
+}
+
+.modal-cancel{
+  background:#f1f5f9;
+}
+
+.modal-confirm{
+  background:var(--primary);
+  color:white;
+}
+
+/* Empty state */
+
+.empty-state{
+  text-align:center;
+
+  padding:40px;
+
+  color:var(--text-light);
+
+  border:2px dashed var(--border);
+
+  border-radius:20px;
+}
+
+.empty-state h3{
+  margin-bottom:10px;
+}
+
+/* Footer */
+
+.footer{
+  text-align:center;
+  margin-top:40px;
+  color:var(--text-light);
+  font-size:13px;
+}
+
+/* Mobile */
+
+@media (max-width: 900px){
+
+  .card-grid{
+    grid-template-columns:1fr;
+  }
+
+  .hero{
+    padding:28px;
+  }
+
+  .hero h1{
+    font-size:32px;
+  }
+
+  .top-actions{
+    flex-direction:column;
+    align-items:stretch;
+  }
+
+  .action-group{
+    width:100%;
+  }
+
+  .action-group button{
+    flex:1;
+  }
+
+  .calculate-btn{
+    width:100%;
+  }
+
+  .result-card{
+    flex-direction:column;
+    align-items:flex-start;
+    gap:10px;
+  }
+}
+
+@media (max-width: 600px){
+
+  body{
+    padding:12px;
+  }
+
+  .hero{
+    border-radius:22px;
+  }
+
+  .main-card{
+    padding:18px;
+    border-radius:22px;
+  }
+
+  .stat-value{
+    font-size:28px;
+  }
+
+  .section-title{
+    font-size:20px;
+  }
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <!-- Hero -->
+
+  <div class="hero">
+    <h1>🛒 Shoppers Points Calculator</h1>
+
+    <p>
+      Split purchases between buyers,
+      calculate taxes automatically,
+      and estimate PC Optimum points savings.
+    </p>
+  </div>
+
+  <!-- Main Card -->
+
+  <div class="main-card">
+
+    <!-- Links -->
+
+    <div class="links">
+
+      <a href="./beta.html">
+        🚀 New Version (Work in Progress)
+      </a>
+
+      <a href="./amazon_review_tracker.html">
+        ⭐ Amazon Review Tracker
+      </a>
+
+    </div>
+
+    <!-- Top Action Bar -->
+
+    <div class="top-actions">
+
+      <div class="section-title">
+        Purchase Items
+      </div>
+
+      <div class="action-group">
+
+        <button
+          class="btn btn-primary"
+          onclick="addCard()">
+          ➕ Add Item
+        </button>
+
+        <button
+          class="btn btn-secondary"
+          onclick="clearAllItems()">
+          Clear All
+        </button>
+
+      </div>
+
+    </div>
+
+    <!-- Dynamic Item Cards -->
+
+    <div id="itemContainer">
+
+      <div class="empty-state" id="emptyState">
+
+        <h3>No Items Yet</h3>
+
+        <p>
+          Click "Add Item" to start entering purchases.
+        </p>
+
+      </div>
+
+    </div>
+
+    <!-- Calculate -->
+
+    <div class="calculate-section">
+
+      <button
+        class="btn btn-primary calculate-btn"
+        onclick="submitCalculation()">
+
+        Calculate Savings
+
+      </button>
+
+    </div>
+
+    <!-- Results -->
+
+    <div
+      class="results-section"
+      id="resultsSection">
+
+      <div class="results-title">
+        Results
+      </div>
+
+      <div id="resultsOutput">
+
+        <div class="empty-state">
+
+          <h3>No Calculations Yet</h3>
+
+          <p>
+            Add items and press Calculate.
+          </p>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+
+  <div class="footer">
+    Shoppers Points Calculator V2
+  </div>
+
+</div>
+
+<!-- Buyer Modal -->
+
+<div
+  id="modalOverlay"
+  class="modal-overlay">
+
+  <div class="modal">
+
+    <div class="modal-title">
+      Add Buyer
+    </div>
+
+    <div class="modal-text">
+      Enter a custom buyer name.
+    </div>
+
+    <input
+      id="modalInput"
+      class="modal-input"
+      type="text"
+      placeholder="Buyer name">
+
+    <div
+      id="modalError"
+      class="modal-error">
+    </div>
+
+    <div class="modal-actions">
+
+      <button
+        id="modalCancel"
+        class="modal-btn modal-cancel">
+        Cancel
+      </button>
+
+      <button
+        id="modalConfirm"
+        class="modal-btn modal-confirm">
+        Add Buyer
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+
+const App = {
+
+  state: {
+    items: []
+  },
+
+  config: {
+    TAX: 0.13,
+    BUYERS: ['Idy','Susan','Sunny','Patty','Other']
+  },
+
+  init(){
+    this.cacheDOM();
+    this.bindEvents();
+    this.addItem(); // default
+  },
+
+  cacheDOM(){
+    this.container = document.getElementById('itemContainer');
+    this.results = document.getElementById('resultsOutput');
+    this.statTotal = document.getElementById('statTotal');
+    this.statSavings = document.getElementById('statSavings');
+    this.statAfter = document.getElementById('statAfter');
+  },
+
+  bindEvents(){
+
+    document.querySelector('.btn-primary')
+      .addEventListener('click', () => this.addItem());
+
+    document.querySelector('.calculate-btn')
+      .addEventListener('click', () => this.calculate());
+
+    document.querySelector('.btn-secondary')
+      .addEventListener('click', () => this.clear());
+
+    // event delegation
+    this.container.addEventListener('input', () => this.sync());
+    this.container.addEventListener('change', (e) => this.handleChange(e));
+    this.container.addEventListener('click', (e) => this.handleClick(e));
+  },
+
+  addItem(){
+    this.state.items.push({
+      id: Date.now(),
+      name:'',
+      price:0,
+      tax:true,
+      buyer:'Idy'
+    });
+
+    this.render();
+  },
+
+  clear(){
+    this.state.items = [];
+    this.render();
+  },
+
+  removeItem(id){
+    this.state.items =
+      this.state.items.filter(i => i.id !== id);
+
+    this.render();
+  },
+
+  handleClick(e){
+
+    if(e.target.classList.contains('delete-btn')){
+      const id = Number(e.target.dataset.id);
+      this.removeItem(id);
+    }
+  },
+
+  handleChange(e){
+
+    const card =
+      e.target.closest('.purchase-card');
+
+    if(!card) return;
+
+    const id = Number(card.dataset.id);
+    const item = this.state.items.find(i => i.id === id);
+
+    if(!item) return;
+
+    // ✅ buyer change logic
+    if(e.target.name === 'buyer'){
+
+      const val = e.target.value;
+
+      if(val === 'Other'){
+
+        const prev = item.buyer;
+
+        this.showBuyerModal('', (name) => {
+
+          if(!name){
+            e.target.value = prev;
+            return;
+          }
+
+          this.addTempBuyer(name);
+
+          item.buyer = name;
+
+          this.render();
+        });
+      }
+    }
+  },
+
+  sync(){
+
+    const cards =
+      this.container.querySelectorAll('.purchase-card');
+
+    cards.forEach(card => {
+
+      const id = Number(card.dataset.id);
+      const item = this.state.items.find(i => i.id === id);
+
+      if(!item) return;
+
+      item.name =
+        card.querySelector('[name=name]').value;
+
+      item.price =
+        parseFloat(card.querySelector('[name=price]').value) || 0;
+
+      item.tax =
+        card.querySelector('[name=tax]').checked;
+
+      item.buyer =
+        card.querySelector('[name=buyer]').value;
+    });
+  },
+
+  addTempBuyer(name){
+
+    const trimmed = name.trim();
+
+    if(!trimmed) return;
+
+    if(this.config.BUYERS.includes(trimmed)) return;
+
+    // 插入 Other 前
+    const idx = this.config.BUYERS.indexOf('Other');
+
+    if(idx >= 0){
+      this.config.BUYERS.splice(idx, 0, trimmed);
+    }else{
+      this.config.BUYERS.push(trimmed);
+    }
+
+    this.updateAllSelects(trimmed);
+  },
+
+  updateAllSelects(selected){
+
+    const selects =
+      document.querySelectorAll('select[name=buyer]');
+
+    selects.forEach(sel => {
+
+      const current = sel.value;
+
+      sel.innerHTML = '';
+
+      this.config.BUYERS.forEach(b => {
+
+        const opt = document.createElement('option');
+        opt.value = b;
+        opt.textContent = b;
+
+        sel.appendChild(opt);
+      });
+
+      if(selected){
+        sel.value = selected;
+      }else{
+        sel.value = current;
+      }
+    });
+  },
+
+  showBuyerModal(initial = '', callback){
+
+    const overlay = document.getElementById('modalOverlay');
+    const input = document.getElementById('modalInput');
+    const error = document.getElementById('modalError');
+    const cancel = document.getElementById('modalCancel');
+    const confirm = document.getElementById('modalConfirm');
+
+    input.value = initial;
+    error.textContent = '';
+    overlay.style.display = 'flex';
+
+    const close = () => {
+      overlay.style.display = 'none';
+      cancel.removeEventListener('click', onCancel);
+      confirm.removeEventListener('click', onConfirm);
+    };
+
+    const onCancel = () => {
+      close();
+      callback(null);
+    };
+
+    const onConfirm = () => {
+
+      const val = input.value.trim();
+
+      if(!val){
+        error.textContent = 'Please enter name';
+        return;
+      }
+
+      close();
+      callback(val);
+    };
+
+    cancel.addEventListener('click', onCancel);
+    confirm.addEventListener('click', onConfirm);
+  },
+
+  calculate(){
+
+  const totals = {};
+
+  this.config.BUYERS.forEach(b=>{
+    totals[b] = {
+      total: 0,
+      noTax: 0
+    };
+  });
+
+  let grandTotal = 0;
+
+  this.state.items.forEach(i=>{
+
+    const finalPrice =
+      i.tax
+        ? i.price * (1 + this.config.TAX)
+        : i.price;
+
+    if (!totals[i.buyer]) return;
+
+    totals[i.buyer].total += finalPrice;
+    totals[i.buyer].noTax += i.price;
+
+    grandTotal += finalPrice;
+  });
+
+  this.renderResults(totals);
+  },
+
+  render(){
+
+    if(this.state.items.length === 0){
+      this.container.innerHTML = `
+        <div class="empty-state">
+          <h3>No Items</h3>
+          <p>Click Add Item to start</p>
+        </div>`;
+      return;
+    }
+
+    this.container.innerHTML =
+      this.state.items.map(i => `
+        <div class="purchase-card" data-id="${i.id}">
+
+          <div class="card-grid">
+
+            <div class="field">
+              <label>Item</label>
+              <input name="name" value="${i.name}">
+            </div>
+
+            <div class="field">
+              <label>Price</label>
+              <input name="price" type="number" value="${i.price}">
+            </div>
+
+            <div class="field">
+              <label>Tax</label>
+              <div class="tax-box">
+                <input name="tax" type="checkbox" ${i.tax ? 'checked':''}>
+                <span>Include</span>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Buyer</label>
+              <select name="buyer">
+                ${this.config.BUYERS.map(b=>`
+                  <option ${i.buyer===b?'selected':''}>${b}</option>
+                `).join('')}
+              </select>
+            </div>
+
+            <button class="delete-btn" data-id="${i.id}">✕</button>
+
+          </div>
+
+        </div>
+      `).join('');
+  },
+
+  renderStats(totals, grandTotal){
+
+  let afterPointsTotal = 0;
+
+  Object.values(totals).forEach(t => {
+
+    // 👉 这是你原来的 points 公式
+    const discount =
+      t.noTax * 15 * 20 / 1000;
+
+    afterPointsTotal += (t.total - discount);
+
+  });
+
+
+  },
+
+  renderResults(totals){
+
+  const list =
+    Object.entries(totals)
+    .filter(([name, t]) => t.total > 0);
+
+  this.results.innerHTML =
+    list.map(([name, t]) => {
+
+      const discount =
+        t.noTax * 15 * 20 / 1000;
+
+      const before = t.total;
+      const after = t.total - discount;
+
+      return `
+        <div class="result-card">
+
+          <div class="result-left">
+
+            <div class="result-name">
+              ${name}
+            </div>
+
+            <div class="result-saving">
+              Before Discount: $${before.toFixed(2)}
+            </div>
+
+            <div class="result-saving">
+              Points Discount: -$${discount.toFixed(2)}
+            </div>
+
+          </div>
+
+          <div class="result-total">
+            $${after.toFixed(2)}
+          </div>
+
+        </div>
+      `;
+    }).join('') || `
+      <div class="empty-state">
+        <h3>No Results</h3>
+        <p>No purchases found for any buyer.</p>
+      </div>
+    `;
+}
+};
+
+window.addEventListener('DOMContentLoaded', () => {
+  App.init();
+});
+
+</script>
+</body>
+</html>
