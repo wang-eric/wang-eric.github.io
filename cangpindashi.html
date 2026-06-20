@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>博古大师：环球寻宝 v9.9 - 双轨数值重平衡版</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        .rarity-0 { color: #6b7280; } 
+        .rarity-1 { color: #10b981; font-weight: 600; } 
+        .rarity-2 { color: #2563eb; font-weight: bold; } 
+        .rarity-3 { color: #9333ea; font-weight: bold; text-shadow: 0 0 4px rgba(147,51,234,0.2); } 
+        .rarity-4 { color: #d97706; font-weight: bold; text-shadow: 0 0 6px rgba(217,119,6,0.4); }
+        
+        .card-rarity-0 { border-color: #e5e7eb; background: #f9fafb; }
+        .card-rarity-1 { border-color: #86efac; background: linear-gradient(to bottom right, #f0fdf4, #f8fafc); }
+        .card-rarity-2 { border-color: #93c5fd; background: linear-gradient(to bottom right, #eff6ff, #f8fafc); }
+        .card-rarity-3 { border-color: #c084fc; background: linear-gradient(to bottom right, #faf5ff, #f8fafc); }
+        .card-rarity-4 { border-color: #fde047; background: linear-gradient(to bottom right, #fffbeb, #fffdf5); }
+
+        .s-rarity-0 { border-color: #86efac; background-color: #f0fdf4; color: #166534; } 
+        .s-rarity-1 { border-color: #93c5fd; background-color: #eff6ff; color: #1e40af; } 
+        .s-rarity-2 { border-color: #c084fc; background-color: #faf5ff; color: #6b21a8; border-width: 2px; } 
+        .s-rarity-3 { border-color: #fde047; background-color: #fffbeb; color: #9a3412; border-width: 2px; } 
+        
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f5f5f4; }
+        ::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 3px; }
+
+        @keyframes pulse-scan {
+            0% { transform: scale(0.97); opacity: 0.6; }
+            50% { transform: scale(1.03); opacity: 0.9; }
+            100% { transform: scale(0.97); opacity: 0.6; }
+        }
+        .anim-hunting { animation: pulse-scan 0.8s infinite ease-in-out; }
+
+        @theme {
+            --grid-template-columns-24: repeat(24, minmax(0, 1fr));
+            --grid-column-span-4: span 4 / span 4;
+            --grid-column-span-5: span 5 / span 5;
+            --grid-column-span-7: span 7 / span 7;
+            --grid-column-span-8: span 8 / span 8;
+        }
+    </style>
+</head>
+<body class="bg-stone-100 p-4 font-sans text-zinc-800 antialiased">
+
+<div id="app" class="max-w-[1850px] mx-auto bg-stone-50 rounded-2xl shadow-2xl border-4 border-stone-800 overflow-hidden">
+    
+    <div class="bg-stone-900 text-amber-100 p-4 flex flex-col xl:flex-row justify-between items-start xl:items-center border-b-4 border-amber-800 gap-4">
+        <div>
+            <div class="flex items-center gap-2">
+                <h1 class="text-2xl font-serif font-bold tracking-widest text-amber-400">🏛️ 博古大师</h1>
+                <span class="text-xs bg-red-700 text-white px-2 py-0.5 rounded-full font-mono font-bold animate-pulse">v9.9 双轨重衡版</span>
+            </div>
+            <p class="text-sm mt-1 text-stone-300">
+                当前展馆评级：<span class="text-yellow-400 font-bold text-base">{{ museumTitle }}</span> 
+                <span class="text-stone-400 ml-2">(基础馆值: {{ baseMuseumValue }} | 羁绊共鸣增益: <span class="text-emerald-400 font-bold">+{{ setBonusValue }}</span>)</span>
+            </p>
+        </div>
+        <div class="flex items-center space-x-6 font-mono text-right w-full xl:w-auto justify-between xl:justify-end">
+            <div class="bg-stone-800/80 px-4 py-2 rounded-lg border border-stone-700">
+                <div class="text-xs text-stone-400 text-left">🏛️ 总馆藏估值</div>
+                <div class="text-2xl font-bold text-emerald-400">{{ totalMuseumValue }}</div>
+            </div>
+            <div class="bg-stone-800/80 px-4 py-2 rounded-lg border border-stone-700">
+                <div class="text-xs text-stone-400 text-left">💰 商号流动资金</div>
+                <div class="text-xl font-bold text-yellow-400">￥{{ money.toLocaleString() }}</div>
+            </div>
+            <div class="bg-stone-800/80 px-4 py-2 rounded-lg border border-stone-700 min-w-[150px]">
+                <div class="text-xs text-stone-400 text-left flex justify-between">
+                    <span>🔋 行动精力</span>
+                    <span class="text-amber-400 text-xs font-sans">{{ energyTimerText }}</span>
+                </div>
+                <div class="text-sm text-stone-200 text-left mt-0.5 flex items-center justify-between">
+                    <div><span class="text-green-400 font-bold text-lg">{{ energy }}</span> / {{ maxEnergy }}</div>
+                    <div class="w-16 bg-stone-700 h-2 rounded-full overflow-hidden ml-2">
+                        <div class="bg-amber-400 h-full transition-all duration-1000" :style="{ width: (energyProgress / 5 * 100) + '%' }"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-24 gap-4 p-4">
+        
+        <div class="xl:col-span-4 bg-white p-4 rounded-xl border border-stone-200 h-[820px] flex flex-col justify-between">
+            <div>
+                <h2 class="text-base font-serif font-bold text-stone-900 mb-3 flex items-center gap-1.5 border-b pb-2 border-stone-100">
+                    <span>📍 考察路线</span>
+                </h2>
+                <div class="space-y-2 overflow-y-auto h-[630px] pr-1">
+                    <div v-for="map in sortedMaps" :key="map.id" 
+                         @click="selectMap(map)"
+                         :class="['p-2.5 rounded-xl border-2 transition-all cursor-pointer select-none relative', 
+                                  currentMapId === map.id ? 'border-amber-600 bg-amber-50/30 shadow-xs' : 'border-stone-100 bg-stone-50/50 hover:bg-stone-100/80']">
+                        
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="font-serif font-bold text-stone-900 flex items-center gap-0.5">
+                                <span v-if="currentMapId === map.id">📍</span>{{ map.name }}
+                            </span>
+                            <span class="text-xs text-stone-500 font-mono bg-stone-200/60 px-1.5 py-0.5 rounded">￥{{ map.cost }}</span>
+                        </div>
+
+                        <div class="mt-2">
+                            <div class="flex justify-between text-xs text-stone-500">
+                                <span>在展: <b class="text-stone-700 font-mono">{{ getMapCollectedCount(map.id) }}</b>/{{ map.id === 10 ? 90 : 50 }}</span>
+                                <span class="font-mono font-bold text-stone-600">{{ getMapProgress(map.id) }}%</span>
+                            </div>
+                            <div class="w-full bg-stone-200 rounded-full h-1.5 overflow-hidden mt-1">
+                                <div class="h-full bg-stone-600" :style="{ width: getMapProgress(map.id) + '%' }"></div>
+                            </div>
+                        </div>
+
+                        <div class="text-xs mt-2 flex justify-between items-center pt-1 border-t border-dashed border-stone-200/60">
+                            <span v-if="totalMuseumValue >= map.reqValue" class="text-emerald-600 font-medium">✓ 准予考查</span>
+                            <span v-else class="text-red-500 font-bold bg-red-50 px-1.5 py-0.5 rounded">🔒 馆值≥{{ map.reqValue.toLocaleString() }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="text-xs text-stone-500 bg-amber-50 p-2.5 rounded-lg border border-amber-200 leading-relaxed">
+                ⚖️ <b>双轨调衡说明</b>：<br>
+                1. 调低了前期藏品基础估价（例如潘家园蓝色仅值 ¥300），杜绝“单抽通关”。<br>
+                2. 配合拉高了前中期开图门槛，逼迫玩家在本地图深度经营与组合图鉴。
+            </div>
+        </div>
+
+        <div class="xl:col-span-7 space-y-4 flex flex-col h-[820px]">
+            
+            <div class="bg-white p-4 rounded-xl border border-stone-200 flex-1 flex flex-col justify-between min-h-0">
+                <div class="flex justify-between items-center border-b pb-2 border-stone-100">
+                    <h2 class="text-lg font-serif font-bold text-stone-900">🧭</h2>
+                    <span class="text-xs text-stone-500 font-serif bg-stone-100 px-2 py-1 rounded">当前驻地：<b class="text-stone-800">{{ maps.find(m => m.id === currentMapId).name }}</b></span>
+                </div>
+
+                <div class="flex-1 flex flex-col items-center justify-center p-4 relative">
+                    <div v-if="!isSearching && !recentFoundItem" class="text-center space-y-4">
+                        <div class="w-24 h-24 rounded-full bg-amber-50 border-2 border-amber-200 flex items-center justify-center text-4xl mx-auto shadow-inner select-none">🃏</div>
+                        <div>
+                            <h3 class="text-base font-serif font-bold text-stone-800">考查队已就位</h3>
+                            <p class="text-xs text-stone-400 max-w-xs mx-auto mt-1">点击下方按钮派遣小队，带回绝版集换式神级卡牌或古玩。</p>
+                        </div>
+                    </div>
+
+                    <div v-if="isSearching" class="text-center space-y-3">
+                        <div class="w-24 h-24 rounded-full bg-amber-600 text-white flex items-center justify-center text-4xl mx-auto shadow-md anim-hunting">✨</div>
+                        <div class="space-y-1">
+                            <h3 class="text-base font-serif font-bold text-amber-800 animate-pulse">盲盒解封/古玩辨伪中...</h3>
+                            <p class="text-xs text-stone-400 font-mono">SEEKING RARE COLLECTIBLES</p>
+                        </div>
+                    </div>
+
+                    <div v-if="!isSearching && recentFoundItem" class="text-center space-y-4 w-full max-w-sm p-4 bg-stone-50 border border-amber-200 rounded-2xl shadow-inner relative overflow-hidden">
+                        <div class="absolute top-0 right-0 bg-amber-600 text-white text-xs font-bold px-2 py-0.5 rounded-bl">NEW</div>
+                        <div class="text-4xl">{{ recentFoundItem.mapId === 10 ? '✨' : '🏺' }}</div>
+                        <div>
+                            <span class="text-xs font-bold text-emerald-600 tracking-wider uppercase block mb-1">🎉 成功获得宝物！</span>
+                            <h4 :class="['font-serif font-bold text-base', 'rarity-' + recentFoundItem.rarity]">{{ recentFoundItem.name }}</h4>
+                            <div class="flex justify-center gap-2 mt-2 text-xs text-stone-500 font-mono bg-white/60 py-1 px-3 rounded border border-stone-200/40 w-max mx-auto">
+                                <span>估值: ￥{{ recentFoundItem.value.toLocaleString() }}</span>
+                                <span>|</span>
+                                <span>{{ recentFoundItem.rarityName }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="px-2 pb-2">
+                    <button @click="handleHuntingWorkflow" 
+                            :disabled="isSearching"
+                            :class="['w-full font-serif font-bold py-3.5 text-sm rounded-xl shadow-md transition active:scale-98 select-none',
+                                     isSearching ? 'bg-stone-300 text-stone-500 cursor-not-allowed' : 
+                                     recentFoundItem ? 'bg-gradient-to-b from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white cursor-pointer' : 
+                                     'bg-gradient-to-b from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white cursor-pointer']">
+                        <span v-if="isSearching">🔍 正在火速搜寻中...</span>
+                        <span v-else-if="recentFoundItem">🃏 收下并继续寻宝</span>
+                        <span v-else>🗺️ 即刻派遣寻宝队</span>
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 border-t pt-3 border-stone-100">
+                    <button @click="energy = maxEnergy" class="bg-stone-800 hover:bg-stone-900 text-amber-100 text-xs py-1.5 rounded-lg cursor-pointer">☕ 饮茶瞬间补满精力</button>
+                    <button @click="cheatCollect" class="bg-amber-100 hover:bg-amber-200 text-amber-800 text-xs py-1.5 rounded-lg cursor-pointer">✨ 调试注入(含百万测试金)</button>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl border border-stone-200 flex-1 flex flex-col min-h-0">
+                <div class="flex flex-col gap-1.5 border-b pb-2 mb-2">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-base font-serif font-bold text-stone-900 flex items-center gap-1">📜 共鸣图鉴</h2>
+                        <span class="text-xs bg-amber-50 text-amber-800 px-2 py-0.5 rounded border border-amber-200 font-mono">激活: {{ completedSetsCount }}/{{ sets.length }}</span>
+                    </div>
+                    <div class="flex flex-wrap gap-1 text-xs">
+                        <button v-for="(tab, idx) in tabOptions" :key="idx" @click="activeTab = idx" :class="['px-2 py-0.5 rounded transition cursor-pointer', activeTab === idx ? 'bg-stone-800 text-white font-bold' : 'bg-stone-100 text-stone-600 hover:bg-stone-200']">{{ tab }}</button>
+                    </div>
+                </div>
+
+                <div class="flex-1 overflow-y-auto space-y-2 pr-1">
+                    <div v-for="set in filteredSets" :key="set.name" :class="['p-2.5 rounded-xl border transition relative overflow-hidden', 's-rarity-' + set.rarity, isSetComplete(set) ? 'ring-2 ring-amber-500' : '']">
+                        <div class="flex justify-between font-bold items-center border-b border-stone-200/30 pb-1 mb-1.5">
+                            <span class="font-serif text-xs">[{{ set.realRarityName }}] {{ set.name }}</span>
+                            <span :class="['text-xs px-1.5 py-0.2 rounded', isSetComplete(set) ? 'bg-amber-600 text-white font-bold' : 'bg-stone-200/80 text-stone-500']">{{ isSetComplete(set) ? '✨ 完美共鸣' : '未凑齐' }}</span>
+                        </div>
+                        <div class="text-xs font-mono mb-1.5 opacity-90">
+                            <span>图鉴奖励加成: <b class="font-bold">+{{ set.bonus.toLocaleString() }} 馆值</b></span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-1.5">
+                            <div v-for="reqName in set.items" :key="reqName" :title="getItemHoverTitle(reqName)" :class="['text-xs px-2 py-1 rounded border tracking-wide group cursor-help flex justify-between items-center bg-white/70 truncate', hasItemInShowcase(reqName) ? 'border-emerald-500 bg-emerald-50! text-emerald-800 font-medium' : 'border-stone-200 text-stone-400']">
+                                <span class="truncate pr-1">{{ reqName }}</span>
+                                <span class="text-xs font-mono shrink-0">{{ hasItemInShowcase(reqName) ? '✓' : 'x' }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="h-[95px] flex flex-col min-h-0 bg-stone-900 p-2 rounded-xl text-stone-200 font-mono text-xs space-y-1 overflow-y-auto shadow-inner">
+                <div v-for="(log, idx) in logs" :key="idx" v-html="log" class="border-b border-stone-800/60 pb-0.5 last:border-0"></div>
+            </div>
+        </div>
+
+        <div class="xl:col-span-6 bg-white p-4 rounded-xl border border-stone-200 h-[820px] flex flex-col justify-between">
+            <div>
+                <div class="flex justify-between items-center border-b pb-2 border-stone-100 mb-2">
+                    <h2 class="text-base font-serif font-bold text-stone-900 flex items-center gap-1">📦 未入库暂存箱</h2>
+                    <span class="text-xs bg-stone-100 px-2 py-0.5 text-stone-500 rounded-full font-mono font-bold">{{ bag.length }} 件文物</span>
+                </div>
+                <div class="overflow-y-auto h-[730px] space-y-2 pr-1">
+                    <div v-if="bag.length === 0" class="text-center text-stone-400 py-16 text-xs italic">暂存箱空空如也，请在控制台启动考查。</div>
+                    <div v-for="(item, idx) in bag" :key="idx" :class="['p-3 rounded-xl border text-xs flex flex-col justify-between transition-all shadow-2xs hover:shadow-sm', 'card-rarity-' + item.rarity]">
+                        <div>
+                            <div class="flex justify-between items-start gap-2">
+                                <span :class="['font-bold text-sm tracking-wide', 'rarity-' + item.rarity]">{{ item.name }}</span>
+                                <span class="text-xs bg-white/80 px-1.5 py-0.5 border border-stone-200 rounded text-stone-600 shrink-0 font-medium">{{ item.rarityName }}</span>
+                            </div>
+                            <div class="text-xs text-stone-500 mt-2 space-y-1 bg-white/40 p-2 rounded border border-stone-100">
+                                <div>💰 市值估价: <b class="text-stone-800 font-mono">￥{{ item.value.toLocaleString() }}</b></div>
+                                <div>📍 产出路线: <b class="text-stone-700 font-serif">{{ item.originMap }}</b></div>
+                            </div>
+                        </div>
+                        <div class="mt-3 pt-2 border-t border-stone-200/40 flex justify-end gap-2">
+                            <button @click="sellFromBag(idx)" class="bg-red-50 hover:bg-red-100 text-red-700 px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer">💸 出售变现</button>
+                            <button v-if="!hasItemInShowcase(item.name)" @click="moveToShowcase(idx)" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 rounded-lg text-xs font-medium shadow-2xs cursor-pointer">🏛️ 移至展厅</button>
+                            <span v-else class="text-xs text-stone-400 self-center bg-stone-100 px-2 py-1 rounded-lg">展柜已有</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="xl:col-span-7 bg-white p-4 rounded-xl border border-stone-200 h-[820px] flex flex-col justify-between">
+            <div>
+                <div class="flex flex-col gap-2 border-b pb-2 border-stone-100 mb-2">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-base font-serif font-bold text-stone-900 flex items-center gap-1">🏛️ 常设展厅</h2>
+                        <span class="text-xs bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-full font-mono font-bold">{{ showcase.length }} 件在展</span>
+                    </div>
+                    <div class="flex items-center gap-1 bg-stone-100 p-1 rounded-lg text-xs">
+                        <span class="text-stone-500 pl-1 font-medium mr-1">分类视角:</span>
+                        <button @click="displayGroupMode = 'none'" :class="['flex-1 py-1 rounded-md text-center transition cursor-pointer', displayGroupMode === 'none' ? 'bg-white font-bold shadow-xs text-stone-900' : 'text-stone-600 hover:text-stone-900']">平铺</button>
+                        <button @click="displayGroupMode = 'rarity'" :class="['flex-1 py-1 rounded-md text-center transition cursor-pointer', displayGroupMode === 'rarity' ? 'bg-white font-bold shadow-xs text-stone-900' : 'text-stone-600 hover:text-stone-900']">💎 稀有度</button>
+                        <button @click="displayGroupMode = 'map'" :class="['flex-1 py-1 rounded-md text-center transition cursor-pointer', displayGroupMode === 'map' ? 'bg-white font-bold shadow-xs text-stone-900' : 'text-stone-600 hover:text-stone-900']">🗺️ 出土遗迹</button>
+                    </div>
+                </div>
+
+                <div class="overflow-y-auto h-[685px] space-y-4 pr-1">
+                    <div v-if="showcase.length === 0" class="text-center text-stone-400 py-16 text-xs italic">常设展厅尚无陈列，请从暂存箱上架文物。</div>
+                    
+                    <div v-if="displayGroupMode === 'none'" class="space-y-2">
+                        <div v-for="(item, idx) in showcase" :key="'flat-'+idx" :class="['p-3 rounded-xl border text-xs flex flex-col justify-between shadow-2xs relative overflow-hidden', 'card-rarity-' + item.rarity]">
+                            <div>
+                                <span :class="['font-bold text-sm block tracking-wide', 'rarity-' + item.rarity]">{{ item.name }}</span>
+                                <div class="text-xs text-stone-500 mt-2 space-y-1 bg-white/40 p-1.5 rounded border border-stone-100">
+                                    <div class="text-emerald-700 font-semibold">🎖️ 生效馆值: +{{ item.value.toLocaleString() }}</div>
+                                    <div>路线: <span class="font-serif text-stone-700 font-medium">{{ item.originMap }}</span></div>
+                                </div>
+                            </div>
+                            <div class="mt-3 pt-2 border-t border-stone-200/40 flex justify-end">
+                                <button @click="moveToBagFromFlat(idx)" class="bg-stone-200 hover:bg-stone-300 text-stone-700 px-3 py-1 rounded-lg text-xs font-medium cursor-pointer">📦 撤回暂存</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div v-else v-for="group in groupedShowcase" :key="group.id" class="space-y-2">
+                        <div @click="toggleGroup(group.id)" class="text-xs font-bold text-stone-600 bg-stone-100 hover:bg-stone-200/80 px-2.5 py-1.5 rounded-md flex justify-between items-center sticky top-0 bg-opacity-90 backdrop-blur-xs z-10 cursor-pointer select-none border border-stone-200/40">
+                            <div class="flex items-center gap-1.5">
+                                <span>{{ group.title }}</span>
+                                <span class="font-mono text-stone-400 font-normal">({{ group.list.length }})</span>
+                            </div>
+                            <div class="text-stone-400 font-mono text-[10px]">
+                                <span v-if="isGroupCollapsed(group.id)">展开 🔽</span>
+                                <span v-else>收起 🔼</span>
+                            </div>
+                        </div>
+                        
+                        <div v-show="!isGroupCollapsed(group.id)" class="space-y-2 pl-1 transition-all">
+                            <div v-for="wrapper in group.list" :key="wrapper.globalIndex" :class="['p-3 rounded-xl border text-xs flex flex-col justify-between shadow-2xs relative overflow-hidden', 'card-rarity-' + wrapper.item.rarity]">
+                                <div>
+                                    <span :class="['font-bold text-sm block tracking-wide', 'rarity-' + wrapper.item.rarity]">{{ wrapper.item.name }}</span>
+                                    <div class="text-xs text-stone-500 mt-2 space-y-1 bg-white/40 p-1.5 rounded border border-stone-100">
+                                        <div class="text-emerald-700 font-semibold">🎖️ 生效馆值: +{{ wrapper.item.value.toLocaleString() }}</div>
+                                        <div v-if="displayGroupMode === 'rarity'">出土地: <span class="font-serif text-stone-700 font-medium">{{ wrapper.item.originMap }}</span></div>
+                                        <div v-if="displayGroupMode === 'map'">品阶级: <span class="font-semibold text-stone-700">{{ wrapper.item.rarityName }}</span></div>
+                                    </div>
+                                </div>
+                                <div class="mt-3 pt-2 border-t border-stone-200/40 flex justify-end">
+                                    <button @click="moveToBag(wrapper.globalIndex)" class="bg-stone-200 hover:bg-stone-300 text-stone-700 px-3 py-1 rounded-lg text-xs font-medium cursor-pointer">📦 撤回暂存</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    const { createApp, ref, computed, onMounted, onBeforeUnmount } = Vue;
+
+    createApp({
+        setup() {
+            const money = ref(2000); // 极具开荒乐趣的低初始资金
+            const energy = ref(100);
+            const maxEnergy = 100;
+            const currentMapId = ref(1);
+            
+            const isSearching = ref(false);
+            const recentFoundItem = ref(null);
+            
+            const energyProgress = ref(0); 
+            let timerToken = null;
+
+            const bag = ref([]);        
+            const showcase = ref([]);   
+            const logs = ref(["⚙️ 数值平衡重构：融合[阶梯基准下调]与[陡峭开图门槛]，大幅强化前期收集深度。"]);
+
+            const displayGroupMode = ref('none');
+            const activeTab = ref(0);
+            const tabOptions = ["全部", "🟢 普通", "🔵 稀有", "🟣 史诗", "🟠 传说"];
+            
+            const collapsedGroups = ref({});
+
+            // 🛠️ 核心重构一：拔高解锁梯度限制（融合方案一）
+            const maps = [
+                { id: 1, name: "北京·潘家园地摊群", cost: 30, reqValue: 0 },
+                { id: 10, name: "秋叶原·动漫文化前线", cost: 120, reqValue: 4500 },     // 从 3,000 上调至 4,500
+                { id: 2, name: "西安·大唐西市古玩城", cost: 350, reqValue: 20000 },    // 从 15,000 上调至 20,000
+                { id: 3, name: "京都·东寺古物市集", cost: 1000, reqValue: 80000 },     // 从 60,000 上调至 80,000
+                { id: 4, name: "伦敦·波托贝洛集市", cost: 3000, reqValue: 300000 },    // 从 250,000 上调至 300,000
+                { id: 5, name: "开罗·汗哈利利市场遗迹", cost: 9000, reqValue: 1000000 }, // 从 800,000 上调至 1,000,000
+                { id: 6, name: "巴黎·德鲁奥高阶拍卖会", cost: 25000, reqValue: 3500000 }, // 从 2.4M 上调至 3.5M
+                { id: 7, name: "纽约·苏富比春季艺术大拍", cost: 80000, reqValue: 12000000 },// 进阶到千万级
+                { id: 8, name: "东京·中央艺术博览大拍", cost: 220000, reqValue: 45000000 },
+                { id: 9, name: "香港·佳士得秋季臻品巨拍", cost: 750000, reqValue: 150000000 }// 终极破亿线
+            ];
+
+            const sortedMaps = computed(() => {
+                return [...maps].sort((a, b) => a.reqValue - b.reqValue);
+            });
+
+            // 🛠️ 核心重构二：全系藏品基础价值下调（融合方案三）
+            const rarityDict = {
+                0: { name: "现代工艺", base: 20 },      // 100 -> 20
+                1: { name: "初级名录", base: 80 },      // 1000 -> 80
+                2: { name: "高档珍玩", base: 300 },     // 6000 -> 300 (潘家园单件蓝色价值下降至约 ¥300)
+                3: { name: "馆藏泰斗", base: 1500 },    // 35000 -> 1500
+                4: { name: "镇馆孤品", base: 8000 }     // 220000 -> 8000
+            };
+
+            const setRarityDict = {
+                0: { name: "普通套装", mult: 1 },
+                1: { name: "稀有套装", mult: 2.5 },
+                2: { name: "史诗套装", mult: 6 },
+                3: { name: "传说套装", mult: 15 }
+            };
+
+            const lootTables = ref({});
+            const sets = ref([]);
+            const globalItemMap = {};
+
+            const energyTimerText = computed(() => {
+                if (energy.value >= maxEnergy) return "✨ 精力充沛";
+                const remain = 5 - Math.floor(energyProgress.value);
+                return `⏳ 恢复: ${remain}s`;
+            });
+
+            const startEnergyRegen = () => {
+                timerToken = setInterval(() => {
+                    if (energy.value < maxEnergy) {
+                        energyProgress.value += 0.5;
+                        if (energyProgress.value >= 5) {
+                            energy.value++;
+                            energyProgress.value = 0;
+                        }
+                    } else {
+                        energyProgress.value = 0;
+                    }
+                }, 500);
+            };
+
+            const buildDatabase = () => {
+                const mapPrefixes = {
+                    1: ["潘家园", "燕京", "老北京"], 2: ["西市", "秦川", "大唐"], 3: ["东寺", "平安京", "江户"],
+                    4: ["雾都", "波托贝洛", "维多利亚"], 5: ["汗哈利利", "法老", "尼罗河"], 6: ["德鲁奥", "塞纳河", "波旁"],
+                    7: ["苏富比", "曼哈顿", "西区"], 8: ["中央大拍", "银座", "幕府"], 9: ["佳士得", "港岛", "香江"]
+                };
+
+                const nounPool = {
+                    0: ["高仿缠枝纹瓷瓶", "机制镀银纪念币", "合成松石扳指", "做旧大清铜钱"],
+                    1: ["老式白铜墨盒", "徽州老字号墨块", "纯铜精工算盘"],
+                    2: ["老坑冰种飘花翡翠扣", "和田玉籽料辟邪把件"],
+                    3: ["御制掐丝珐琅夔龙纹炉", "错金银博山线香炉"],
+                    4: ["传国玉玺极境孤本翡翠玺", "西周青铜双耳大鼎遗存"]
+                };
+
+                for (let mId of [1,2,3,4,5,6,7,8,9]) {
+                    lootTables.value[mId] = [];
+                    let pfxs = mapPrefixes[mId];
+                    let currentMapName = maps.find(m => m.id === mId).name;
+                    
+                    for (let i = 0; i < 50; i++) {
+                        let rarity = 0;
+                        if (i < 15) rarity = 0;      
+                        else if (i < 27) rarity = 1; 
+                        else if (i < 37) rarity = 2; 
+                        else if (i < 45) rarity = 3; 
+                        else rarity = 4;             
+
+                        let pfx = pfxs[(i + mId) % pfxs.length];
+                        let nouns = nounPool[rarity];
+                        let noun = nouns[(i * 7) % nouns.length];
+                        let itemName = `${pfx}·${noun}`;
+
+                        // 保持指数暴涨曲线不变：指数的基数在后段会无限扩大反差
+                        let mapWeight = Math.pow(2.2, mId - 1);
+                        let finalVal = Math.floor(rarityDict[rarity].base * mapWeight * (0.85 + ((i * 13) % 30) / 100));
+
+                        const itemObj = {
+                            name: itemName, rarity: rarity, rarityName: rarityDict[rarity].name,
+                            value: finalVal, mapId: mId, mapName: currentMapName
+                        };
+                        lootTables.value[mId].push(itemObj);
+                        globalItemMap[itemName] = itemObj;
+                    }
+                }
+
+                // 注入动漫集换式卡牌地图 10 
+                lootTables.value[10] = [];
+                const animMapName = "秋叶原·动漫文化前线";
+
+                const shuihuNames = [
+                    {n: "鼓上蚤·时迁", r: 0}, {n: "地煞星·镇三山·黄信", r: 0}, {n: "地魁星·神机军师·朱武", r: 0}, {n: "高俅(四大恶贼绝版卡)", r: 0}, 
+                    {n: "蔡京(高晟大画错版)", r: 0}, {n: "天满星·美髯公·朱仝", r: 0}, {n: "天富星·扑天雕·李应", r: 0}, {n: "天贵星·小旋风·柴进", r: 0}, 
+                    {n: "天捷星·没羽箭·张清", r: 1}, {n: "天立星·双枪将·董平", r: 1}, {n: "天速星·神行太保·戴宗", r: 1}, {n: "天天空星·急先锋·索超", r: 1},
+                    {n: "天佑星·金枪手·徐宁", r: 1}, {n: "天异星·赤发鬼·刘唐", r: 1}, {n: "母夜叉·孙二娘", r: 1}, {n: "天机星·智多星·吴用", r: 1},
+                    {n: "天勇星·大刀·关胜", r: 2}, {n: "天猛星·霹雳火·秦明", r: 2}, {n: "天威星·双鞭·呼延灼", r: 2}, {n: "天英星·小李广·花荣", r: 2},
+                    {n: "天暗星·青面兽·杨志", r: 2}, {n: "天杀星·黑旋风·李逵", r: 2}, {n: "天寿星·混江龙·李俊", r: 2},
+                    {n: "天闲星·入云龙·公孙胜", r: 3}, {n: "天微星·九纹龙·史进", r: 3}, {n: "天孤星·花和尚·鲁智深", r: 3}, {n: "天伤星·行者·武松", r: 3},
+                    {n: "天罡星·玉麒麟·卢俊义", r: 4}, {n: "天雄星·豹子头·林冲", r: 4}, {n: "天魁星·及时雨·宋江(限量金箔)", r: 4}
+                ];
+
+                const pokemonNames = [
+                    {n: "咆哮虎(对战热血)", r: 0}, {n: "吼鲸王(极限巨大隐藏版)", r: 0}, {n: "伊布(特典水彩画)", r: 0}, {n: "妙蛙种子(初版全息)", r: 0},
+                    {n: "火伊布(火之石红莲)", r: 0}, {n: "雷伊布(雷之石电光)", r: 0}, {n: "水伊布(水之石晶莹)", r: 0}, {n: "快龙(初代准神)", r: 0},
+                    {n: "太阳伊布(日光绚烂)", r: 1}, {n: "月亮伊布(月轮守望)", r: 1}, {n: "仙子伊布(妖精幻境)", r: 1}, {n: "路卡利欧(波导勇者)", r: 1},
+                    {n: "哲尔尼亚斯(生命之树)", r: 1}, {n: "伊裴尔塔尔(破坏之翼)", r: 1}, {n: "基拉祈(千年彗星许愿)", r: 1}, {n: "达克莱伊(暗黑噩梦)", r: 1},
+                    {n: "固拉多(断崖之剑红晶)", r: 2}, {n: "盖欧卡(根源波动蓝晶)", r: 2}, {n: "耿鬼(耿鬼超级巨化罕见)", r: 2}, {n: "水箭龟(无阴影错版卡)", r: 2},
+                    {n: "烈咬陆鲨(冠军竹兰签章)", r: 2}, {n: "甲贺忍蛙(小智羁绊形态)", r: 2}, {n: "阿尔宙斯(创世神话闪耀)", r: 2},
+                    {n: "梦幻(远古光辉限定)", r: 3}, {n: "洛奇亚(水晶星宿绝版)", r: 3}, {n: "凤王(彩虹极光特绘)", r: 3}, {n: "烈空坐(烈空苍穹特大异画)", r: 3},
+                    {n: "超梦(幻之觉醒珍藏)", r: 4}, {n: "喷火龙(第一弹限量BaseSet)", r: 4}, {n: "初世代·皮卡丘(元祖初版闪卡)", r: 4}
+                ];
+
+                const opNames = [
+                    {n: "巴基(千两道化神级崩坏)", r: 0}, {n: "月光·莫利亚(影之支配者)", r: 0}, {n: "弗兰奇(超级将军纪念)", r: 0}, {n: "布鲁克(黄泉奏鸣曲)", r: 0},
+                    {n: "乌索普(神之狙击手)", r: 0}, {n: "沙·克洛克达尔(沙鳄沙暴)", r: 0}, {n: "娜美(航海士秘宝金卡)", r: 0}, {n: "托尼托尼·乔巴(樱花奇迹赏)", r: 0},
+                    {n: "妮可·罗宾(花花果实神髓)", r: 1}, {n: "甚平(海侠侠义大画)", r: 1}, {n: "海侠·甚平(七武海元老)", r: 1}, {n: "巴索罗米·熊(肉球冲击残页)", r: 1},
+                    {n: "大和(犬犬果实大口真神)", r: 1}, {n: "光月御田(和之国将军流光)", r: 1}, {n: "尤斯塔斯·基德(磁气魔人)", r: 1}, {n: "萨博(革命军龙之爪)", r: 1},
+                    {n: "唐吉诃德·多弗朗明哥(天夜叉线线)", r: 2}, {n: "波雅·汉库克(女帝芳香脚亲签)", r: 2}, {n: "特拉法尔加·罗(手术空间ROOM)", r: 2}, {n: "波特卡斯·D·艾斯(炎帝永恒经典)", r: 2},
+                    {n: "文斯莫克·山治(魔神风脚)", r: 2}, {n: "罗罗诺亚·索隆(三刀流奥义全息)", r: 2}, {n: "夏洛特·玲玲(大妈魂之挽歌)", r: 2},
+                    {n: "新旧四皇·凯多(百兽青龙形态)", r: 3}, {n: "马歇尔·D·蒂奇(黑胡子双果实)", r: 3}, {n: "鹰眼·米霍克(世界第一黑刀)", r: 3}, {n: "香克斯(红发霸王色缠绕)", r: 3},
+                    {n: "哥尔·D·罗杰(海贼王传奇孤品)", r: 4}, {n: "爱德华·纽盖特(白胡子震动错版)", r: 4}, {n: "蒙奇·D·路飞(五档太阳神尼卡特绘)", r: 4}
+                ];
+
+                const cardInjector = (arr) => {
+                    arr.forEach((meta, idx) => {
+                        // 秋叶原相当于地图2的加成系数
+                        let finalVal = Math.floor(rarityDict[meta.r].base * 2.2 * (0.92 + ((idx * 19) % 20) / 100));
+                        const cardObj = {
+                            name: meta.n, rarity: meta.r, rarityName: rarityDict[meta.r].name,
+                            value: finalVal, mapId: 10, mapName: animMapName
+                        };
+                        lootTables.value[10].push(cardObj);
+                        globalItemMap[meta.n] = cardObj;
+                    });
+                };
+
+                cardInjector(shuihuNames);
+                cardInjector(pokemonNames);
+                cardInjector(opNames);
+
+                // 生成基础图鉴
+                for (let sIdx = 0; sIdx < 25; sIdx++) {
+                    let setRarity = sIdx % 4;
+                    let setCompItems = [];
+                    let mId = (sIdx % 9) + 1;
+                    let pool = lootTables.value[mId];
+                    for (let k = 0; k < 4; k++) {
+                        let idx = (sIdx * 4 + k * 6) % pool.length;
+                        setCompItems.push(pool[idx].name);
+                    }
+                    sets.value.push({
+                        name: `古玩经典第 ${sIdx + 1} 辑套装`, rarity: setRarity, 
+                        realRarityName: setRarityDict[setRarity].name, bonus: 1000 * (sIdx + 1), items: setCompItems
+                    });
+                }
+
+                // 重新适配高罕图鉴奖励数值，使其成为前期突破的主要驱动力
+                sets.value.push({
+                    name: "🏮 水浒传：梁山天罡神卡组", rarity: 2, realRarityName: "史诗套装", bonus: 15000,
+                    items: ["天魁星·及时雨·宋江(限量金箔)", "天罡星·玉麒麟·卢俊义", "天机星·智多星·吴用", "天雄星·豹子头·林冲"]
+                });
+                sets.value.push({
+                    name: "🏮 水浒传：四大恶贼珍藏", rarity: 1, realRarityName: "稀有套装", bonus: 5000,
+                    items: ["高俅(四大恶贼绝版卡)", "蔡京(高晟大画错版)", "天魁星·及时雨·宋江(限量金箔)"]
+                });
+                sets.value.push({
+                    name: "🏮 水浒传：水浒金刚限定卡", rarity: 3, realRarityName: "传说套装", bonus: 40000,
+                    items: ["天孤星·花和尚·鲁智深", "天伤星·行者·武松", "天微星·九纹龙·史进"]
+                });
+
+                sets.value.push({
+                    name: "🎮 宝可梦：初代御三家梦幻组合", rarity: 1, realRarityName: "稀有套装", bonus: 6000,
+                    items: ["喷火龙(第一弹限量BaseSet)", "水箭龟(无阴影错版卡)", "妙蛙种子(初版全息)"]
+                });
+                sets.value.push({
+                    name: "🎮 宝可梦：传说神兽殿堂", rarity: 3, realRarityName: "传说套装", bonus: 50000,
+                    items: ["超梦(幻之觉醒珍藏)", "梦幻(远古光辉限定)", "洛奇亚(水晶星宿绝版)", "凤王(彩虹极光特绘)"]
+                });
+                sets.value.push({
+                    name: "🎮 宝可梦：伊布家族全闪臻选", rarity: 2, realRarityName: "史诗套装", bonus: 18000,
+                    items: ["伊布(特典水彩画)", "水伊布(水之石晶莹)", "雷伊布(雷之石电光)", "火伊布(火之石红莲)"]
+                });
+
+                sets.value.push({
+                    name: "🏴‍裂 海贼王：草帽一伙悬赏全集", rarity: 1, realRarityName: "稀有套装", bonus: 7000,
+                    items: ["蒙奇·D·路飞(五档太阳神尼卡特绘)", "罗罗诺亚·索隆(三刀流奥义全息)", "文斯莫克·山治(魔神风脚)", "托尼托尼·乔巴(樱花奇迹赏)"]
+                });
+                sets.value.push({
+                    name: "🏴‍裂 海贼王：新旧四皇交锋录", rarity: 3, realRarityName: "传说套装", bonus: 60000,
+                    items: ["哥尔·D·罗杰(海贼王传奇孤品)", "爱德华·纽盖特(白胡子震动错版)", "香克斯(红发霸王色缠绕)", "马歇尔·D·蒂奇(黑胡子双果实)"]
+                });
+                sets.value.push({
+                    name: "🏴‍裂 海贼王：王下七武海巅峰阵", rarity: 2, realRarityName: "史诗套装", bonus: 20000,
+                    items: ["鹰眼·米霍克(世界第一黑刀)", "波雅·汉库克(女帝芳香脚亲签)", "唐吉诃德·多弗朗明哥(天夜叉线线)"]
+                });
+
+                sets.value.push({
+                    name: "🌟 次元打破·三界魁首终极聚首", rarity: 3, realRarityName: "传说套装", bonus: 100000,
+                    items: [
+                        "天魁星·及时雨·宋江(限量金箔)", 
+                        "初世代·皮卡丘(元祖初版闪卡)", 
+                        "蒙奇·D·路飞(五档太阳神尼卡特绘)"
+                    ]
+                });
+            };
+
+            const hasItemInShowcase = (itemName) => showcase.value.some(i => i.name === itemName);
+            const isSetComplete = (set) => set.items.every(itemName => hasItemInShowcase(itemName));
+            
+            const getItemHoverTitle = (itemName) => {
+                const item = globalItemMap[itemName];
+                if (!item) return itemName;
+                return `【${itemName}】\n考查产地：${item.mapName}\n馆藏评值：￥${item.value.toLocaleString()}`;
+            };
+
+            const filteredSets = computed(() => {
+                if (activeTab.value === 0) return sets.value;
+                return sets.value.filter(s => s.rarity === (activeTab.value - 1));
+            });
+
+            const getMapCollectedCount = (mapId) => {
+                if (!lootTables.value[mapId]) return 0;
+                return lootTables.value[mapId].filter(tplItem => hasItemInShowcase(tplItem.name)).length;
+            };
+
+            const getMapProgress = (mapId) => {
+                let cnt = getMapCollectedCount(mapId);
+                let total = (mapId === 10) ? 90 : 50;
+                return Math.floor((cnt / total) * 100);
+            };
+
+            const completedSetsCount = computed(() => sets.value.filter(s => isSetComplete(s)).length);
+            const baseMuseumValue = computed(() => showcase.value.reduce((sum, item) => sum + item.value, 0));
+            const setBonusValue = computed(() => sets.value.reduce((sum, set) => sum + (isSetComplete(set) ? set.bonus : 0), 0));
+            const totalMuseumValue = computed(() => baseMuseumValue.value + setBonusValue.value);
+
+            const museumTitle = computed(() => {
+                const val = totalMuseumValue.value;
+                if (val < 2000) return "🏡 街头文玩摊位";
+                if (val < 30000) return "🏛️ 地方文物陈列馆";
+                if (val < 500000) return "👑 跨国甲等文博艺术中心";
+                return "🌟 全球至尊皇家级神殿";
+            });
+
+            const toggleGroup = (groupId) => {
+                collapsedGroups.value[groupId] = !collapsedGroups.value[groupId];
+            };
+            const isGroupCollapsed = (groupId) => {
+                return !!collapsedGroups.value[groupId];
+            };
+
+            const groupedShowcase = computed(() => {
+                if (displayGroupMode.value === 'none') return [];
+
+                if (displayGroupMode.value === 'rarity') {
+                    const groups = {
+                        4: { id: "rarity-4", title: "🟠 镇馆孤品", list: [] },
+                        3: { id: "rarity-3", title: "🟣 馆藏泰斗", list: [] },
+                        2: { id: "rarity-2", title: "🔵 高档珍玩", list: [] },
+                        1: { id: "rarity-1", title: "🟢 初级名录", list: [] },
+                        0: { id: "rarity-0", title: "⚪ 现代工艺", list: [] }
+                    };
+                    showcase.value.forEach((item, index) => {
+                        if (groups[item.rarity]) {
+                            groups[item.rarity].list.push({ item, globalIndex: index });
+                        }
+                    });
+                    return Object.values(groups).filter(g => g.list.length > 0);
+                }
+
+                if (displayGroupMode.value === 'map') {
+                    const mapBucket = {};
+                    maps.forEach(m => {
+                        mapBucket[m.name] = { id: `map-${m.id}`, title: `📍 ${m.name}`, list: [] };
+                    });
+                    mapBucket["未知来源"] = { id: "map-unknown", title: "❓ 未知路线来源", list: [] };
+
+                    showcase.value.forEach((item, index) => {
+                        const tgtBucket = mapBucket[item.originMap] || mapBucket["未知来源"];
+                        tgtBucket.list.push({ item, globalIndex: index });
+                    });
+
+                    return Object.values(mapBucket).filter(g => g.list.length > 0);
+                }
+                return [];
+            });
+
+            const addLog = (msg) => {
+                logs.value.unshift(msg);
+                if (logs.value.length > 25) logs.value.pop();
+            };
+
+            const selectMap = (map) => {
+                if (totalMuseumValue.value < map.reqValue) {
+                    alert(`🔒 门槛不达标！该高级路线由于安保及身份限制，需要总馆值达到 [${map.reqValue.toLocaleString()}]。请继续经营前置场馆或凑齐共鸣图鉴！`);
+                    return;
+                }
+                currentMapId.value = map.id;
+                recentFoundItem.value = null; 
+                addLog(`🎯 <b>线路跳转</b>：考查队已经转战至【${map.name}】进行深挖。`);
+            };
+
+            const handleHuntingWorkflow = () => {
+                if (isSearching.value) return;
+                if (recentFoundItem.value) {
+                    recentFoundItem.value = null;
+                }
+                startHunting();
+            };
+
+            const startHunting = () => {
+                const map = maps.find(m => m.id === currentMapId.value);
+                if (energy.value <= 0) return alert("精力消耗殆尽，请稍事休息或饮茶补满！");
+                if (money.value < map.cost) return alert("商号流动资金不足以支付本段路线的考察成本！");
+
+                energy.value--;
+                money.value -= map.cost;
+                isSearching.value = true;
+
+                const randomDuration = Math.floor(Math.random() * (600 - 350 + 1)) + 350; 
+
+                setTimeout(() => {
+                    const pool = lootTables.value[map.id];
+                    const r = Math.random() * 100;
+                    let targetRarity = 0;
+                    
+                    if (r < 5.0) targetRarity = 4;       
+                    else if (r < 15.0) targetRarity = 3; 
+                    else if (r < 36.0) targetRarity = 2; 
+                    else if (r < 68.0) targetRarity = 1; 
+                    else targetRarity = 0;               
+
+                    let filtered = pool.filter(i => i.rarity === targetRarity);
+                    if (filtered.length === 0) filtered = pool;
+                    const itemTemplate = filtered[Math.floor(Math.random() * filtered.length)];
+
+                    const finalItem = {
+                        name: itemTemplate.name,
+                        rarity: itemTemplate.rarity,
+                        rarityName: itemTemplate.rarityName,
+                        value: itemTemplate.value,
+                        originMap: map.name,
+                        mapId: map.id
+                    };
+
+                    bag.value.unshift(finalItem);
+                    isSearching.value = false;
+                    recentFoundItem.value = finalItem;
+
+                    addLog(`✨ <b>考查捷报</b>：在【${map.name}】成功入手 <span class="rarity-${finalItem.rarity}">[${finalItem.rarityName}] ${finalItem.name}</span>！`);
+                }, randomDuration);
+            };
+
+            const moveToShowcase = (index) => {
+                const item = bag.value[index];
+                if (hasItemInShowcase(item.name)) return alert("展厅里已有相同的展品陈列中！");
+                
+                showcase.value.unshift(item);
+                bag.value.splice(index, 1);
+                addLog(`🏛️ <b>展位陈列</b>：【${item.name}】正式移入常设展厅！`);
+
+                sets.value.forEach(set => {
+                    if (set.items.includes(item.name) && isSetComplete(set)) {
+                        addLog(`🎉 <b class="text-yellow-500">【突破次元壁·图鉴共鸣】</b> 达成：<b>${set.name}</b>！获得大额馆值加成 <b>+${set.bonus.toLocaleString()}</b>！`);
+                    }
+                });
+            };
+
+            const moveToBag = (globalIndex) => {
+                const item = showcase.value[globalIndex];
+                showcase.value.splice(globalIndex, 1);
+                bag.value.unshift(item);
+                addLog(`📦 <b>下架撤回</b>：将【${item.name}】撤回暂存箱。`);
+            };
+
+            const moveToBagFromFlat = (index) => {
+                const item = showcase.value[index];
+                showcase.value.splice(index, 1);
+                bag.value.unshift(item);
+                addLog(`📦 <b>下架撤回</b>：将【${item.name}】撤回暂存箱。`);
+            };
+
+            const sellFromBag = (index) => {
+                const item = bag.value[index];
+                money.value += item.value;
+                addLog(`💸 <b>市场结汇</b>：出售【${item.name}】，回笼商号资金 ￥${item.value.toLocaleString()}`);
+                bag.value.splice(index, 1);
+            };
+
+            const cheatCollect = () => {
+                const targets = [
+                    "天魁星·及时雨·宋江(限量金箔)", 
+                    "初世代·皮卡丘(元祖初版闪卡)", 
+                    "蒙奇·D·路飞(五档太阳神尼卡特绘)"
+                ];
+                targets.forEach(t => {
+                    if(!hasItemInShowcase(t) && globalItemMap[t]) {
+                        showcase.value.unshift({...globalItemMap[t]});
+                    }
+                });
+
+                // 配合新的严苛环境注入更多基础藏品，并给与 300 万调试金
+                const allItems = Object.values(globalItemMap);
+                for(let i=0; i<60; i++){
+                    const randomItem = allItems[Math.floor(Math.random() * allItems.length)];
+                    if(!hasItemInShowcase(randomItem.name)) {
+                        showcase.value.unshift({...randomItem});
+                    }
+                }
+                money.value += 3000000; 
+                addLog("✨ <b>调试注入</b>：强行灌注大量中后期展品组合，并注入 300 万元现金供高级长线测试！");
+            };
+
+            onMounted(() => {
+                buildDatabase();
+                startEnergyRegen();
+            });
+
+            onBeforeUnmount(() => {
+                if (timerToken) clearInterval(timerToken);
+            });
+
+            return {
+                money, energy, maxEnergy, currentMapId, maps, sortedMaps, bag, showcase, logs,
+                baseMuseumValue, setBonusValue, totalMuseumValue, museumTitle, sets, completedSetsCount,
+                hasItemInShowcase, isSetComplete, selectMap, startHunting, moveToShowcase, moveToBag, moveToBagFromFlat, sellFromBag,
+                getMapProgress, getMapCollectedCount, getItemHoverTitle, activeTab, tabOptions, filteredSets, cheatCollect,
+                energyProgress, energyTimerText, isSearching, recentFoundItem, handleHuntingWorkflow,
+                displayGroupMode, groupedShowcase, toggleGroup, isGroupCollapsed
+            };
+        }
+    }).mount('#app');
+</script>
+</body>
+</html>
