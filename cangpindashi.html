@@ -2,8 +2,9 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>博古大师：环球寻宝 v9.9 - 双轨数值重平衡版</title>
+    <!-- 使用最新的 TailwindCSS -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <style>
@@ -24,9 +25,9 @@
         .s-rarity-2 { border-color: #c084fc; background-color: #faf5ff; color: #6b21a8; border-width: 2px; } 
         .s-rarity-3 { border-color: #fde047; background-color: #fffbeb; color: #9a3412; border-width: 2px; } 
         
-        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: #f5f5f4; }
-        ::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 2px; }
 
         @keyframes pulse-scan {
             0% { transform: scale(0.97); opacity: 0.6; }
@@ -35,287 +36,240 @@
         }
         .anim-hunting { animation: pulse-scan 0.8s infinite ease-in-out; }
 
-        @theme {
-            --grid-template-columns-24: repeat(24, minmax(0, 1fr));
-            --grid-column-span-4: span 4 / span 4;
-            --grid-column-span-5: span 5 / span 5;
-            --grid-column-span-7: span 7 / span 7;
-            --grid-column-span-8: span 8 / span 8;
+        /* 针对手机端全面优化的高度限制和滚动体验 */
+        .mobile-panel-height {
+            height: calc(100vh - 430px);
+            min-height: 350px;
         }
     </style>
 </head>
-<body class="bg-stone-100 p-4 font-sans text-zinc-800 antialiased">
+<body class="bg-stone-100 p-1 font-sans text-zinc-800 antialiased select-none">
 
-<div id="app" class="max-w-[1850px] mx-auto bg-stone-50 rounded-2xl shadow-2xl border-4 border-stone-800 overflow-hidden">
+<div id="app" class="w-full max-w-md mx-auto bg-stone-50 rounded-xl shadow-lg border-2 border-stone-800 overflow-hidden min-h-screen flex flex-col">
     
-    <div class="bg-stone-900 text-amber-100 p-4 flex flex-col xl:flex-row justify-between items-start xl:items-center border-b-4 border-amber-800 gap-4">
-        <div>
-            <div class="flex items-center gap-2">
-                <h1 class="text-2xl font-serif font-bold tracking-widest text-amber-400">🏛️ 博古大师</h1>
-                <span class="text-xs bg-red-700 text-white px-2 py-0.5 rounded-full font-mono font-bold animate-pulse">v9.9 双轨重衡版</span>
+    <!-- 头部：手机端紧凑型状态栏 -->
+    <div class="bg-stone-900 text-amber-100 p-3 border-b-2 border-amber-800 shrink-0">
+        <div class="flex justify-between items-center">
+            <div class="flex items-center gap-1.5">
+                <h1 class="text-lg font-serif font-bold tracking-wider text-amber-400">🏛️ 博古大师</h1>
+                <span class="text-[10px] bg-red-700 text-white px-1.5 py-0.2 rounded-full font-mono scale-90">v9.9</span>
             </div>
-            <p class="text-sm mt-1 text-stone-300">
-                当前展馆评级：<span class="text-yellow-400 font-bold text-base">{{ museumTitle }}</span> 
-                <span class="text-stone-400 ml-2">(基础馆值: {{ baseMuseumValue }} | 羁绊共鸣增益: <span class="text-emerald-400 font-bold">+{{ setBonusValue }}</span>)</span>
-            </p>
+            <div class="text-right">
+                <span class="text-xs text-stone-400">评级:</span>
+                <span class="text-yellow-400 font-bold text-xs ml-1">{{ museumTitle.split(' ')[1] }}</span> 
+            </div>
         </div>
-        <div class="flex items-center space-x-6 font-mono text-right w-full xl:w-auto justify-between xl:justify-end">
-            <div class="bg-stone-800/80 px-4 py-2 rounded-lg border border-stone-700">
-                <div class="text-xs text-stone-400 text-left">🏛️ 总馆藏估值</div>
-                <div class="text-2xl font-bold text-emerald-400">{{ totalMuseumValue }}</div>
+        
+        <!-- 数值资产栏：横向平铺三列 -->
+        <div class="grid grid-cols-3 gap-1.5 mt-2 font-mono text-center">
+            <div class="bg-stone-800/90 p-1.5 rounded border border-stone-700">
+                <div class="text-[10px] text-stone-400 scale-90">🏛️ 馆藏估值</div>
+                <div class="text-sm font-bold text-emerald-400 truncate">{{ totalMuseumValue.toLocaleString() }}</div>
             </div>
-            <div class="bg-stone-800/80 px-4 py-2 rounded-lg border border-stone-700">
-                <div class="text-xs text-stone-400 text-left">💰 商号流动资金</div>
-                <div class="text-xl font-bold text-yellow-400">￥{{ money.toLocaleString() }}</div>
+            <div class="bg-stone-800/90 p-1.5 rounded border border-stone-700">
+                <div class="text-[10px] text-stone-400 scale-90">💰 流动资金</div>
+                <div class="text-sm font-bold text-yellow-400 truncate">￥{{ money.toLocaleString() }}</div>
             </div>
-            <div class="bg-stone-800/80 px-4 py-2 rounded-lg border border-stone-700 min-w-[150px]">
-                <div class="text-xs text-stone-400 text-left flex justify-between">
-                    <span>🔋 行动精力</span>
-                    <span class="text-amber-400 text-xs font-sans">{{ energyTimerText }}</span>
+            <div class="bg-stone-800/90 p-1.5 rounded border border-stone-700">
+                <div class="text-[10px] text-stone-400 scale-90 flex justify-center gap-1">
+                    <span>🔋 精力</span>
+                    <span class="text-amber-400 scale-90">{{ energyTimerText.replace('⏳ 恢复: ','') }}</span>
                 </div>
-                <div class="text-sm text-stone-200 text-left mt-0.5 flex items-center justify-between">
-                    <div><span class="text-green-400 font-bold text-lg">{{ energy }}</span> / {{ maxEnergy }}</div>
-                    <div class="w-16 bg-stone-700 h-2 rounded-full overflow-hidden ml-2">
-                        <div class="bg-amber-400 h-full transition-all duration-1000" :style="{ width: (energyProgress / 5 * 100) + '%' }"></div>
+                <div class="text-xs text-stone-200 font-bold mt-0.5 flex items-center justify-center gap-1">
+                    <span>{{ energy }}/{{ maxEnergy }}</span>
+                    <div class="w-8 bg-stone-700 h-1 rounded-full overflow-hidden inline-block">
+                        <div class="bg-amber-400 h-full" :style="{ width: (energyProgress / 5 * 100) + '%' }"></div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 xl:grid-cols-24 gap-4 p-4">
+    <!-- 核心操作区：寻宝与盲盒控制台（置顶常驻，方便单手点按） -->
+    <div class="p-3 bg-white border-b border-stone-200 shrink-0 shadow-sm">
+        <div class="flex justify-between items-center mb-1">
+            <span class="text-xs text-stone-500 font-serif bg-stone-100 px-2 py-0.5 rounded truncate max-w-[200px]">
+                📍 <b>{{ maps.find(m => m.id === currentMapId).name }}</b>
+            </span>
+            <span class="text-[11px] text-stone-400 font-mono">COST: ￥{{ maps.find(m => m.id === currentMapId).cost }}</span>
+        </div>
+
+        <div class="h-32 flex items-center justify-center bg-stone-50 border border-stone-200 rounded-xl relative overflow-hidden my-2">
+            <!-- 初始就位 -->
+            <div v-if="!isSearching && !recentFoundItem" class="text-center p-2">
+                <div class="text-2xl mb-1">🃏</div>
+                <p class="text-[11px] text-stone-500">探险队就位，请立刻派遣小队带回绝版文物</p>
+            </div>
+
+            <!-- 搜寻中 -->
+            <div v-if="isSearching" class="text-center">
+                <div class="w-12 h-12 rounded-full bg-amber-600 text-white flex items-center justify-center text-xl mx-auto shadow anim-hunting">✨</div>
+                <p class="text-xs font-serif text-amber-800 font-bold mt-2 animate-pulse">古玩盲盒解封辨伪中...</p>
+            </div>
+
+            <!-- 获得宝物 -->
+            <div v-if="!isSearching && recentFoundItem" class="text-center w-full max-w-xs px-3 py-2 relative">
+                <div class="absolute top-0 right-0 bg-amber-600 text-white text-[9px] font-bold px-1.5 py-0.2 rounded-bl">NEW</div>
+                <div class="text-2xl mb-1">{{ recentFoundItem.mapId === 10 ? '✨' : '🏺' }}</div>
+                <h4 :class="['font-serif font-bold text-xs truncate', 'rarity-' + recentFoundItem.rarity]">{{ recentFoundItem.name }}</h4>
+                <div class="text-[10px] text-stone-500 font-mono mt-1">
+                    估值: <span class="text-emerald-600 font-bold">￥{{ recentFoundItem.value.toLocaleString() }}</span> | {{ recentFoundItem.rarityName }}
+                </div>
+            </div>
+        </div>
+
+        <!-- 核心大按钮：极易触控 -->
+        <button @click="handleHuntingWorkflow" 
+                :disabled="isSearching"
+                :class="['w-full font-serif font-bold py-3 text-sm rounded-xl shadow-md transition active:scale-95 select-none',
+                         isSearching ? 'bg-stone-300 text-stone-500 cursor-not-allowed' : 
+                         recentFoundItem ? 'bg-gradient-to-b from-emerald-600 to-emerald-700 text-white' : 
+                         'bg-gradient-to-b from-amber-600 to-amber-700 text-white']">
+            <span v-if="isSearching">🔍 火速搜寻中...</span>
+            <span v-else-if="recentFoundItem">🃏 收下宝物并继续</span>
+            <span v-else>🗺️ 即刻派遣寻宝队</span>
+        </button>
+
+        <!-- 辅助调试/快捷键 -->
+        <div class="grid grid-cols-2 gap-2 mt-2">
+            <button @click="energy = maxEnergy" class="bg-stone-800 text-amber-100 text-[10px] py-1 rounded-md">☕ 饮茶瞬间满精力</button>
+            <button @click="cheatCollect" class="bg-amber-100 text-amber-800 text-[10px] py-1 rounded-md">✨ 调试注入+300万</button>
+        </div>
+    </div>
+
+    <!-- 手机端核心改动：底部切页标签页导航（Tabs） -->
+    <div class="bg-stone-200 p-1 flex border-b border-stone-300 shrink-0 text-xs font-serif font-bold">
+        <button @click="mobileTab = 'showcase'" :class="['flex-1 py-2 text-center rounded-lg transition', mobileTab === 'showcase' ? 'bg-white text-stone-900 shadow-xs' : 'text-stone-600']">🏛️ 展厅 ({{ showcase.length }})</button>
+        <button @click="mobileTab = 'bag'" :class="['flex-1 py-2 text-center rounded-lg transition', mobileTab === 'bag' ? 'bg-white text-stone-900 shadow-xs' : 'text-stone-600']">📦 暂存 ({{ bag.length }})</button>
+        <button @click="mobileTab = 'sets'" :class="['flex-1 py-2 text-center rounded-lg transition', mobileTab === 'sets' ? 'bg-white text-stone-900 shadow-xs' : 'text-stone-600']">📜 图鉴 ({{ completedSetsCount }})</button>
+        <button @click="mobileTab = 'maps'" :class="['flex-1 py-2 text-center rounded-lg transition', mobileTab === 'maps' ? 'bg-white text-stone-900 shadow-xs' : 'text-stone-600']">📍 路线</button>
+    </div>
+
+    <!-- 动态面板内容（带独立内滚动） -->
+    <div class="flex-1 overflow-y-auto p-3 mobile-panel-height bg-stone-50">
         
-        <div class="xl:col-span-4 bg-white p-4 rounded-xl border border-stone-200 h-[820px] flex flex-col justify-between">
-            <div>
-                <h2 class="text-base font-serif font-bold text-stone-900 mb-3 flex items-center gap-1.5 border-b pb-2 border-stone-100">
-                    <span>📍 考察路线</span>
-                </h2>
-                <div class="space-y-2 overflow-y-auto h-[630px] pr-1">
-                    <div v-for="map in sortedMaps" :key="map.id" 
-                         @click="selectMap(map)"
-                         :class="['p-2.5 rounded-xl border-2 transition-all cursor-pointer select-none relative', 
-                                  currentMapId === map.id ? 'border-amber-600 bg-amber-50/30 shadow-xs' : 'border-stone-100 bg-stone-50/50 hover:bg-stone-100/80']">
-                        
-                        <div class="flex justify-between items-center text-xs">
-                            <span class="font-serif font-bold text-stone-900 flex items-center gap-0.5">
-                                <span v-if="currentMapId === map.id">📍</span>{{ map.name }}
-                            </span>
-                            <span class="text-xs text-stone-500 font-mono bg-stone-200/60 px-1.5 py-0.5 rounded">￥{{ map.cost }}</span>
-                        </div>
-
-                        <div class="mt-2">
-                            <div class="flex justify-between text-xs text-stone-500">
-                                <span>在展: <b class="text-stone-700 font-mono">{{ getMapCollectedCount(map.id) }}</b>/{{ map.id === 10 ? 90 : 50 }}</span>
-                                <span class="font-mono font-bold text-stone-600">{{ getMapProgress(map.id) }}%</span>
-                            </div>
-                            <div class="w-full bg-stone-200 rounded-full h-1.5 overflow-hidden mt-1">
-                                <div class="h-full bg-stone-600" :style="{ width: getMapProgress(map.id) + '%' }"></div>
-                            </div>
-                        </div>
-
-                        <div class="text-xs mt-2 flex justify-between items-center pt-1 border-t border-dashed border-stone-200/60">
-                            <span v-if="totalMuseumValue >= map.reqValue" class="text-emerald-600 font-medium">✓ 准予考查</span>
-                            <span v-else class="text-red-500 font-bold bg-red-50 px-1.5 py-0.5 rounded">🔒 馆值≥{{ map.reqValue.toLocaleString() }}</span>
-                        </div>
-                    </div>
-                </div>
+        <!-- Tab 1: 常设展厅 -->
+        <div v-if="mobileTab === 'showcase'" class="space-y-3">
+            <div class="flex items-center gap-1 bg-stone-200/60 p-1 rounded-lg text-[11px]">
+                <button @click="displayGroupMode = 'none'" :class="['flex-1 py-1 rounded text-center transition', displayGroupMode === 'none' ? 'bg-white font-bold text-stone-900' : 'text-stone-600']">平铺</button>
+                <button @click="displayGroupMode = 'rarity'" :class="['flex-1 py-1 rounded text-center transition', displayGroupMode === 'rarity' ? 'bg-white font-bold text-stone-900' : 'text-stone-600']">💎 稀有度</button>
+                <button @click="displayGroupMode = 'map'" :class="['flex-1 py-1 rounded text-center transition', displayGroupMode === 'map' ? 'bg-white font-bold text-stone-900' : 'text-stone-600']">🗺️ 路线</button>
             </div>
-            <div class="text-xs text-stone-500 bg-amber-50 p-2.5 rounded-lg border border-amber-200 leading-relaxed">
-                ⚖️ <b>双轨调衡说明</b>：<br>
-                1. 调低了前期藏品基础估价（例如潘家园蓝色仅值 ¥300），杜绝“单抽通关”。<br>
-                2. 配合拉高了前中期开图门槛，逼迫玩家在本地图深度经营与组合图鉴。
-            </div>
-        </div>
 
-        <div class="xl:col-span-7 space-y-4 flex flex-col h-[820px]">
+            <div v-if="showcase.length === 0" class="text-center text-stone-400 py-12 text-xs italic">展厅尚无陈列，请从暂存箱上架文物。</div>
             
-            <div class="bg-white p-4 rounded-xl border border-stone-200 flex-1 flex flex-col justify-between min-h-0">
-                <div class="flex justify-between items-center border-b pb-2 border-stone-100">
-                    <h2 class="text-lg font-serif font-bold text-stone-900">🧭</h2>
-                    <span class="text-xs text-stone-500 font-serif bg-stone-100 px-2 py-1 rounded">当前驻地：<b class="text-stone-800">{{ maps.find(m => m.id === currentMapId).name }}</b></span>
-                </div>
-
-                <div class="flex-1 flex flex-col items-center justify-center p-4 relative">
-                    <div v-if="!isSearching && !recentFoundItem" class="text-center space-y-4">
-                        <div class="w-24 h-24 rounded-full bg-amber-50 border-2 border-amber-200 flex items-center justify-center text-4xl mx-auto shadow-inner select-none">🃏</div>
-                        <div>
-                            <h3 class="text-base font-serif font-bold text-stone-800">考查队已就位</h3>
-                            <p class="text-xs text-stone-400 max-w-xs mx-auto mt-1">点击下方按钮派遣小队，带回绝版集换式神级卡牌或古玩。</p>
+            <!-- 平铺模式 -->
+            <div v-if="displayGroupMode === 'none'" class="space-y-2">
+                <div v-for="(item, idx) in showcase" :key="'flat-'+idx" :class="['p-2.5 rounded-xl border text-xs flex justify-between items-center shadow-2xs', 'card-rarity-' + item.rarity]">
+                    <div class="min-w-0 flex-1 pr-2">
+                        <span :class="['font-bold text-xs truncate block', 'rarity-' + item.rarity]">{{ item.name }}</span>
+                        <div class="text-[10px] text-stone-500 mt-0.5 truncate">
+                            🎖️ 馆值: <span class="text-emerald-700 font-semibold">+{{ item.value }}</span> | 路线: {{ item.originMap.split('·')[0] }}
                         </div>
                     </div>
-
-                    <div v-if="isSearching" class="text-center space-y-3">
-                        <div class="w-24 h-24 rounded-full bg-amber-600 text-white flex items-center justify-center text-4xl mx-auto shadow-md anim-hunting">✨</div>
-                        <div class="space-y-1">
-                            <h3 class="text-base font-serif font-bold text-amber-800 animate-pulse">盲盒解封/古玩辨伪中...</h3>
-                            <p class="text-xs text-stone-400 font-mono">SEEKING RARE COLLECTIBLES</p>
-                        </div>
-                    </div>
-
-                    <div v-if="!isSearching && recentFoundItem" class="text-center space-y-4 w-full max-w-sm p-4 bg-stone-50 border border-amber-200 rounded-2xl shadow-inner relative overflow-hidden">
-                        <div class="absolute top-0 right-0 bg-amber-600 text-white text-xs font-bold px-2 py-0.5 rounded-bl">NEW</div>
-                        <div class="text-4xl">{{ recentFoundItem.mapId === 10 ? '✨' : '🏺' }}</div>
-                        <div>
-                            <span class="text-xs font-bold text-emerald-600 tracking-wider uppercase block mb-1">🎉 成功获得宝物！</span>
-                            <h4 :class="['font-serif font-bold text-base', 'rarity-' + recentFoundItem.rarity]">{{ recentFoundItem.name }}</h4>
-                            <div class="flex justify-center gap-2 mt-2 text-xs text-stone-500 font-mono bg-white/60 py-1 px-3 rounded border border-stone-200/40 w-max mx-auto">
-                                <span>估值: ￥{{ recentFoundItem.value.toLocaleString() }}</span>
-                                <span>|</span>
-                                <span>{{ recentFoundItem.rarityName }}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="px-2 pb-2">
-                    <button @click="handleHuntingWorkflow" 
-                            :disabled="isSearching"
-                            :class="['w-full font-serif font-bold py-3.5 text-sm rounded-xl shadow-md transition active:scale-98 select-none',
-                                     isSearching ? 'bg-stone-300 text-stone-500 cursor-not-allowed' : 
-                                     recentFoundItem ? 'bg-gradient-to-b from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white cursor-pointer' : 
-                                     'bg-gradient-to-b from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white cursor-pointer']">
-                        <span v-if="isSearching">🔍 正在火速搜寻中...</span>
-                        <span v-else-if="recentFoundItem">🃏 收下并继续寻宝</span>
-                        <span v-else>🗺️ 即刻派遣寻宝队</span>
-                    </button>
-                </div>
-
-                <div class="grid grid-cols-2 gap-2 border-t pt-3 border-stone-100">
-                    <button @click="energy = maxEnergy" class="bg-stone-800 hover:bg-stone-900 text-amber-100 text-xs py-1.5 rounded-lg cursor-pointer">☕ 饮茶瞬间补满精力</button>
-                    <button @click="cheatCollect" class="bg-amber-100 hover:bg-amber-200 text-amber-800 text-xs py-1.5 rounded-lg cursor-pointer">✨ 调试注入(含百万测试金)</button>
+                    <button @click="moveToBagFromFlat(idx)" class="bg-stone-200 text-stone-700 px-2 py-1 rounded text-[11px] font-medium shrink-0 active:bg-stone-300">撤回</button>
                 </div>
             </div>
 
-            <div class="bg-white p-4 rounded-xl border border-stone-200 flex-1 flex flex-col min-h-0">
-                <div class="flex flex-col gap-1.5 border-b pb-2 mb-2">
-                    <div class="flex justify-between items-center">
-                        <h2 class="text-base font-serif font-bold text-stone-900 flex items-center gap-1">📜 共鸣图鉴</h2>
-                        <span class="text-xs bg-amber-50 text-amber-800 px-2 py-0.5 rounded border border-amber-200 font-mono">激活: {{ completedSetsCount }}/{{ sets.length }}</span>
-                    </div>
-                    <div class="flex flex-wrap gap-1 text-xs">
-                        <button v-for="(tab, idx) in tabOptions" :key="idx" @click="activeTab = idx" :class="['px-2 py-0.5 rounded transition cursor-pointer', activeTab === idx ? 'bg-stone-800 text-white font-bold' : 'bg-stone-100 text-stone-600 hover:bg-stone-200']">{{ tab }}</button>
-                    </div>
+            <!-- 分组模式 -->
+            <div v-else v-for="group in groupedShowcase" :key="group.id" class="space-y-1.5">
+                <div @click="toggleGroup(group.id)" class="text-xs font-bold text-stone-700 bg-stone-200/80 px-2 py-1.5 rounded flex justify-between items-center sticky top-0 z-10">
+                    <span>{{ group.title }} ({{ group.list.length }})</span>
+                    <span class="text-[10px] text-stone-400">{{ isGroupCollapsed(group.id) ? '展开 🔽' : '收起 🔼' }}</span>
                 </div>
-
-                <div class="flex-1 overflow-y-auto space-y-2 pr-1">
-                    <div v-for="set in filteredSets" :key="set.name" :class="['p-2.5 rounded-xl border transition relative overflow-hidden', 's-rarity-' + set.rarity, isSetComplete(set) ? 'ring-2 ring-amber-500' : '']">
-                        <div class="flex justify-between font-bold items-center border-b border-stone-200/30 pb-1 mb-1.5">
-                            <span class="font-serif text-xs">[{{ set.realRarityName }}] {{ set.name }}</span>
-                            <span :class="['text-xs px-1.5 py-0.2 rounded', isSetComplete(set) ? 'bg-amber-600 text-white font-bold' : 'bg-stone-200/80 text-stone-500']">{{ isSetComplete(set) ? '✨ 完美共鸣' : '未凑齐' }}</span>
-                        </div>
-                        <div class="text-xs font-mono mb-1.5 opacity-90">
-                            <span>图鉴奖励加成: <b class="font-bold">+{{ set.bonus.toLocaleString() }} 馆值</b></span>
-                        </div>
-                        <div class="grid grid-cols-2 gap-1.5">
-                            <div v-for="reqName in set.items" :key="reqName" :title="getItemHoverTitle(reqName)" :class="['text-xs px-2 py-1 rounded border tracking-wide group cursor-help flex justify-between items-center bg-white/70 truncate', hasItemInShowcase(reqName) ? 'border-emerald-500 bg-emerald-50! text-emerald-800 font-medium' : 'border-stone-200 text-stone-400']">
-                                <span class="truncate pr-1">{{ reqName }}</span>
-                                <span class="text-xs font-mono shrink-0">{{ hasItemInShowcase(reqName) ? '✓' : 'x' }}</span>
+                
+                <div v-show="!isGroupCollapsed(group.id)" class="space-y-1.5 pl-1">
+                    <div v-for="wrapper in group.list" :key="wrapper.globalIndex" :class="['p-2.5 rounded-xl border text-xs flex justify-between items-center shadow-2xs', 'card-rarity-' + wrapper.item.rarity]">
+                        <div class="min-w-0 flex-1 pr-2">
+                            <span :class="['font-bold text-xs truncate block', 'rarity-' + wrapper.item.rarity]">{{ wrapper.item.name }}</span>
+                            <div class="text-[10px] text-stone-500 mt-0.5 truncate">
+                                🎖️ 馆值: +{{ wrapper.item.value }}
                             </div>
                         </div>
+                        <button @click="moveToBag(wrapper.globalIndex)" class="bg-stone-200 text-stone-700 px-2 py-1 rounded text-[11px] shrink-0 active:bg-stone-300">撤回</button>
                     </div>
                 </div>
-            </div>
-
-            <div class="h-[95px] flex flex-col min-h-0 bg-stone-900 p-2 rounded-xl text-stone-200 font-mono text-xs space-y-1 overflow-y-auto shadow-inner">
-                <div v-for="(log, idx) in logs" :key="idx" v-html="log" class="border-b border-stone-800/60 pb-0.5 last:border-0"></div>
             </div>
         </div>
 
-        <div class="xl:col-span-6 bg-white p-4 rounded-xl border border-stone-200 h-[820px] flex flex-col justify-between">
-            <div>
-                <div class="flex justify-between items-center border-b pb-2 border-stone-100 mb-2">
-                    <h2 class="text-base font-serif font-bold text-stone-900 flex items-center gap-1">📦 未入库暂存箱</h2>
-                    <span class="text-xs bg-stone-100 px-2 py-0.5 text-stone-500 rounded-full font-mono font-bold">{{ bag.length }} 件文物</span>
+        <!-- Tab 2: 未入库暂存箱 -->
+        <div v-if="mobileTab === 'bag'" class="space-y-2">
+            <div v-if="bag.length === 0" class="text-center text-stone-400 py-12 text-xs italic">暂存箱空空如也，请派遣考察。</div>
+            <div v-for="(item, idx) in bag" :key="idx" :class="['p-2.5 rounded-xl border text-xs flex flex-col shadow-2xs', 'card-rarity-' + item.rarity]">
+                <div class="flex justify-between items-center">
+                    <span :class="['font-bold text-xs truncate flex-1 pr-1', 'rarity-' + item.rarity]">{{ item.name }}</span>
+                    <span class="text-[10px] bg-white/80 px-1 border border-stone-200 rounded text-stone-500 shrink-0">{{ item.rarityName }}</span>
                 </div>
-                <div class="overflow-y-auto h-[730px] space-y-2 pr-1">
-                    <div v-if="bag.length === 0" class="text-center text-stone-400 py-16 text-xs italic">暂存箱空空如也，请在控制台启动考查。</div>
-                    <div v-for="(item, idx) in bag" :key="idx" :class="['p-3 rounded-xl border text-xs flex flex-col justify-between transition-all shadow-2xs hover:shadow-sm', 'card-rarity-' + item.rarity]">
-                        <div>
-                            <div class="flex justify-between items-start gap-2">
-                                <span :class="['font-bold text-sm tracking-wide', 'rarity-' + item.rarity]">{{ item.name }}</span>
-                                <span class="text-xs bg-white/80 px-1.5 py-0.5 border border-stone-200 rounded text-stone-600 shrink-0 font-medium">{{ item.rarityName }}</span>
-                            </div>
-                            <div class="text-xs text-stone-500 mt-2 space-y-1 bg-white/40 p-2 rounded border border-stone-100">
-                                <div>💰 市值估价: <b class="text-stone-800 font-mono">￥{{ item.value.toLocaleString() }}</b></div>
-                                <div>📍 产出路线: <b class="text-stone-700 font-serif">{{ item.originMap }}</b></div>
-                            </div>
-                        </div>
-                        <div class="mt-3 pt-2 border-t border-stone-200/40 flex justify-end gap-2">
-                            <button @click="sellFromBag(idx)" class="bg-red-50 hover:bg-red-100 text-red-700 px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer">💸 出售变现</button>
-                            <button v-if="!hasItemInShowcase(item.name)" @click="moveToShowcase(idx)" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 rounded-lg text-xs font-medium shadow-2xs cursor-pointer">🏛️ 移至展厅</button>
-                            <span v-else class="text-xs text-stone-400 self-center bg-stone-100 px-2 py-1 rounded-lg">展柜已有</span>
+                <div class="flex justify-between items-center mt-2 pt-1.5 border-t border-stone-200/40">
+                    <div class="text-[11px] text-stone-500 font-mono">
+                        估价: <b class="text-stone-800">￥{{ item.value }}</b>
+                    </div>
+                    <div class="flex gap-1.5">
+                        <button @click="sellFromBag(idx)" class="bg-red-50 text-red-700 px-2.5 py-1 rounded text-[11px] font-medium active:bg-red-100">💸 出售</button>
+                        <button v-if="!hasItemInShowcase(item.name)" @click="moveToShowcase(idx)" class="bg-emerald-600 text-white px-2.5 py-1 rounded text-[11px] font-medium active:bg-emerald-700">🏛️ 上架</button>
+                        <span v-else class="text-[10px] text-stone-400 self-center bg-stone-100 px-1.5 py-0.5 rounded">展柜已有</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 3: 共鸣图鉴 -->
+        <div v-if="mobileTab === 'sets'" class="space-y-3">
+            <div class="flex flex-wrap gap-1 text-[11px]">
+                <button v-for="(tab, idx) in tabOptions" :key="idx" @click="activeTab = idx" :class="['px-2 py-1 rounded transition', activeTab === idx ? 'bg-stone-800 text-white font-bold' : 'bg-stone-200 text-stone-600']">{{ tab.replace('🟢 ','').replace('🔵 ','').replace('🟣 ','').replace('🟠 ','') }}</button>
+            </div>
+
+            <div class="space-y-2">
+                <div v-for="set in filteredSets" :key="set.name" :class="['p-2.5 rounded-xl border text-xs relative', 's-rarity-' + set.rarity, isSetComplete(set) ? 'ring-2 ring-amber-500' : '']">
+                    <div class="flex justify-between font-bold items-center border-b border-stone-200/30 pb-1 mb-1">
+                        <span class="font-serif text-[11px] truncate max-w-[180px]">[{{ set.realRarityName }}] {{ set.name }}</span>
+                        <span :class="['text-[10px] px-1 py-0.2 rounded', isSetComplete(set) ? 'bg-amber-600 text-white' : 'bg-stone-200 text-stone-500']">{{ isSetComplete(set) ? '激活' : '未齐' }}</span>
+                    </div>
+                    <div class="text-[10px] font-mono mb-1.5 opacity-90">
+                        奖励加成: <b class="font-bold">+{{ set.bonus }} 馆值</b>
+                    </div>
+                    <!-- 子零件列表横向平铺/紧凑展示 -->
+                    <div class="grid grid-cols-1 gap-1">
+                        <div v-for="reqName in set.items" :key="reqName" :class="['text-[10px] px-2 py-0.5 rounded border flex justify-between items-center truncate', hasItemInShowcase(reqName) ? 'border-emerald-500 bg-emerald-50 text-emerald-800 font-medium' : 'border-stone-200 text-stone-400 bg-white/40']">
+                            <span class="truncate pr-1">{{ reqName }}</span>
+                            <span class="font-mono shrink-0">{{ hasItemInShowcase(reqName) ? '✓' : '×' }}</span>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="xl:col-span-7 bg-white p-4 rounded-xl border border-stone-200 h-[820px] flex flex-col justify-between">
-            <div>
-                <div class="flex flex-col gap-2 border-b pb-2 border-stone-100 mb-2">
-                    <div class="flex justify-between items-center">
-                        <h2 class="text-base font-serif font-bold text-stone-900 flex items-center gap-1">🏛️ 常设展厅</h2>
-                        <span class="text-xs bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-full font-mono font-bold">{{ showcase.length }} 件在展</span>
-                    </div>
-                    <div class="flex items-center gap-1 bg-stone-100 p-1 rounded-lg text-xs">
-                        <span class="text-stone-500 pl-1 font-medium mr-1">分类视角:</span>
-                        <button @click="displayGroupMode = 'none'" :class="['flex-1 py-1 rounded-md text-center transition cursor-pointer', displayGroupMode === 'none' ? 'bg-white font-bold shadow-xs text-stone-900' : 'text-stone-600 hover:text-stone-900']">平铺</button>
-                        <button @click="displayGroupMode = 'rarity'" :class="['flex-1 py-1 rounded-md text-center transition cursor-pointer', displayGroupMode === 'rarity' ? 'bg-white font-bold shadow-xs text-stone-900' : 'text-stone-600 hover:text-stone-900']">💎 稀有度</button>
-                        <button @click="displayGroupMode = 'map'" :class="['flex-1 py-1 rounded-md text-center transition cursor-pointer', displayGroupMode === 'map' ? 'bg-white font-bold shadow-xs text-stone-900' : 'text-stone-600 hover:text-stone-900']">🗺️ 出土遗迹</button>
-                    </div>
+        <!-- Tab 4: 考察路线 -->
+        <div v-if="mobileTab === 'maps'" class="space-y-2">
+            <div v-for="map in sortedMaps" :key="map.id" 
+                 @click="selectMap(map)"
+                 :class="['p-2.5 rounded-xl border-2 transition-all relative', 
+                          currentMapId === map.id ? 'border-amber-600 bg-amber-50/50' : 'border-stone-200 bg-white']">
+                
+                <div class="flex justify-between items-center">
+                    <span class="font-serif font-bold text-xs text-stone-900 flex items-center gap-0.5 truncate max-w-[200px]">
+                        <span v-if="currentMapId === map.id">📍</span>{{ map.name }}
+                    </span>
+                    <span class="text-[10px] text-stone-500 font-mono bg-stone-100 px-1.5 py-0.5 rounded">成本:￥{{ map.cost }}</span>
                 </div>
 
-                <div class="overflow-y-auto h-[685px] space-y-4 pr-1">
-                    <div v-if="showcase.length === 0" class="text-center text-stone-400 py-16 text-xs italic">常设展厅尚无陈列，请从暂存箱上架文物。</div>
-                    
-                    <div v-if="displayGroupMode === 'none'" class="space-y-2">
-                        <div v-for="(item, idx) in showcase" :key="'flat-'+idx" :class="['p-3 rounded-xl border text-xs flex flex-col justify-between shadow-2xs relative overflow-hidden', 'card-rarity-' + item.rarity]">
-                            <div>
-                                <span :class="['font-bold text-sm block tracking-wide', 'rarity-' + item.rarity]">{{ item.name }}</span>
-                                <div class="text-xs text-stone-500 mt-2 space-y-1 bg-white/40 p-1.5 rounded border border-stone-100">
-                                    <div class="text-emerald-700 font-semibold">🎖️ 生效馆值: +{{ item.value.toLocaleString() }}</div>
-                                    <div>路线: <span class="font-serif text-stone-700 font-medium">{{ item.originMap }}</span></div>
-                                </div>
-                            </div>
-                            <div class="mt-3 pt-2 border-t border-stone-200/40 flex justify-end">
-                                <button @click="moveToBagFromFlat(idx)" class="bg-stone-200 hover:bg-stone-300 text-stone-700 px-3 py-1 rounded-lg text-xs font-medium cursor-pointer">📦 撤回暂存</button>
-                            </div>
-                        </div>
-                    </div>
+                <div class="mt-1.5 flex items-center justify-between text-[11px] text-stone-500">
+                    <span>在展: <b class="text-stone-700 font-mono">{{ getMapCollectedCount(map.id) }}</b>/{{ map.id === 10 ? 90 : 50 }}</span>
+                    <span class="font-mono font-bold text-stone-600">{{ getMapProgress(map.id) }}%</span>
+                </div>
 
-                    <div v-else v-for="group in groupedShowcase" :key="group.id" class="space-y-2">
-                        <div @click="toggleGroup(group.id)" class="text-xs font-bold text-stone-600 bg-stone-100 hover:bg-stone-200/80 px-2.5 py-1.5 rounded-md flex justify-between items-center sticky top-0 bg-opacity-90 backdrop-blur-xs z-10 cursor-pointer select-none border border-stone-200/40">
-                            <div class="flex items-center gap-1.5">
-                                <span>{{ group.title }}</span>
-                                <span class="font-mono text-stone-400 font-normal">({{ group.list.length }})</span>
-                            </div>
-                            <div class="text-stone-400 font-mono text-[10px]">
-                                <span v-if="isGroupCollapsed(group.id)">展开 🔽</span>
-                                <span v-else>收起 🔼</span>
-                            </div>
-                        </div>
-                        
-                        <div v-show="!isGroupCollapsed(group.id)" class="space-y-2 pl-1 transition-all">
-                            <div v-for="wrapper in group.list" :key="wrapper.globalIndex" :class="['p-3 rounded-xl border text-xs flex flex-col justify-between shadow-2xs relative overflow-hidden', 'card-rarity-' + wrapper.item.rarity]">
-                                <div>
-                                    <span :class="['font-bold text-sm block tracking-wide', 'rarity-' + wrapper.item.rarity]">{{ wrapper.item.name }}</span>
-                                    <div class="text-xs text-stone-500 mt-2 space-y-1 bg-white/40 p-1.5 rounded border border-stone-100">
-                                        <div class="text-emerald-700 font-semibold">🎖️ 生效馆值: +{{ wrapper.item.value.toLocaleString() }}</div>
-                                        <div v-if="displayGroupMode === 'rarity'">出土地: <span class="font-serif text-stone-700 font-medium">{{ wrapper.item.originMap }}</span></div>
-                                        <div v-if="displayGroupMode === 'map'">品阶级: <span class="font-semibold text-stone-700">{{ wrapper.item.rarityName }}</span></div>
-                                    </div>
-                                </div>
-                                <div class="mt-3 pt-2 border-t border-stone-200/40 flex justify-end">
-                                    <button @click="moveToBag(wrapper.globalIndex)" class="bg-stone-200 hover:bg-stone-300 text-stone-700 px-3 py-1 rounded-lg text-xs font-medium cursor-pointer">📦 撤回暂存</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
+                <div class="text-[11px] mt-1.5 flex justify-between items-center pt-1 border-t border-dashed border-stone-200">
+                    <span v-if="totalMuseumValue >= map.reqValue" class="text-emerald-600 font-medium text-[10px]">✓ 准予考查</span>
+                    <span v-else class="text-red-500 font-bold bg-red-50 px-1.5 py-0.5 rounded text-[10px]">🔒 馆值≥{{ map.reqValue.toLocaleString() }}</span>
                 </div>
             </div>
         </div>
 
+    </div>
+
+    <!-- 底部：极简实时日志（保留2行高度，不占用过多视网膜空间） -->
+    <div class="h-11 bg-stone-900 p-1.5 text-stone-300 font-mono text-[10px] space-y-0.5 overflow-y-auto shrink-0 border-t border-stone-800">
+        <div v-for="(log, idx) in logs.slice(0, 5)" :key="idx" v-html="log" class="truncate opacity-90"></div>
     </div>
 </div>
 
@@ -324,7 +278,10 @@
 
     createApp({
         setup() {
-            const money = ref(2000); // 极具开荒乐趣的低初始资金
+            // 新增：手机端主 Tab 页签控制控制状态
+            const mobileTab = ref('showcase'); 
+
+            const money = ref(2000); 
             const energy = ref(100);
             const maxEnergy = 100;
             const currentMapId = ref(1);
@@ -337,7 +294,7 @@
 
             const bag = ref([]);        
             const showcase = ref([]);   
-            const logs = ref(["⚙️ 数值平衡重构：融合[阶梯基准下调]与[陡峭开图门槛]，大幅强化前期收集深度。"]);
+            const logs = ref(["⚙️ 数值平衡重构：融合[阶梯基准下调]与[陡峭开图门槛]。"]);
 
             const displayGroupMode = ref('none');
             const activeTab = ref(0);
@@ -345,31 +302,29 @@
             
             const collapsedGroups = ref({});
 
-            // 🛠️ 核心重构一：拔高解锁梯度限制（融合方案一）
             const maps = [
                 { id: 1, name: "北京·潘家园地摊群", cost: 30, reqValue: 0 },
-                { id: 10, name: "秋叶原·动漫文化前线", cost: 120, reqValue: 4500 },     // 从 3,000 上调至 4,500
-                { id: 2, name: "西安·大唐西市古玩城", cost: 350, reqValue: 20000 },    // 从 15,000 上调至 20,000
-                { id: 3, name: "京都·东寺古物市集", cost: 1000, reqValue: 80000 },     // 从 60,000 上调至 80,000
-                { id: 4, name: "伦敦·波托贝洛集市", cost: 3000, reqValue: 300000 },    // 从 250,000 上调至 300,000
-                { id: 5, name: "开罗·汗哈利利市场遗迹", cost: 9000, reqValue: 1000000 }, // 从 800,000 上调至 1,000,000
-                { id: 6, name: "巴黎·德鲁奥高阶拍卖会", cost: 25000, reqValue: 3500000 }, // 从 2.4M 上调至 3.5M
-                { id: 7, name: "纽约·苏富比春季艺术大拍", cost: 80000, reqValue: 12000000 },// 进阶到千万级
+                { id: 10, name: "秋叶原·动漫文化前线", cost: 120, reqValue: 4500 },     
+                { id: 2, name: "西安·大唐西市古玩城", cost: 350, reqValue: 20000 },    
+                { id: 3, name: "京都·东寺古物市集", cost: 1000, reqValue: 80000 },     
+                { id: 4, name: "伦敦·波托贝洛集市", cost: 3000, reqValue: 300000 },    
+                { id: 5, name: "开罗·汗哈利利市场遗迹", cost: 9000, reqValue: 1000000 }, 
+                { id: 6, name: "巴黎·德鲁奥高阶拍卖会", cost: 25000, reqValue: 3500000 }, 
+                { id: 7, name: "纽约·苏富比春季艺术大拍", cost: 80000, reqValue: 12000000 },
                 { id: 8, name: "东京·中央艺术博览大拍", cost: 220000, reqValue: 45000000 },
-                { id: 9, name: "香港·佳士得秋季臻品巨拍", cost: 750000, reqValue: 150000000 }// 终极破亿线
+                { id: 9, name: "香港·佳士得秋季臻品巨拍", cost: 750000, reqValue: 150000000 }
             ];
 
             const sortedMaps = computed(() => {
                 return [...maps].sort((a, b) => a.reqValue - b.reqValue);
             });
 
-            // 🛠️ 核心重构二：全系藏品基础价值下调（融合方案三）
             const rarityDict = {
-                0: { name: "现代工艺", base: 20 },      // 100 -> 20
-                1: { name: "初级名录", base: 80 },      // 1000 -> 80
-                2: { name: "高档珍玩", base: 300 },     // 6000 -> 300 (潘家园单件蓝色价值下降至约 ¥300)
-                3: { name: "馆藏泰斗", base: 1500 },    // 35000 -> 1500
-                4: { name: "镇馆孤品", base: 8000 }     // 220000 -> 8000
+                0: { name: "现代工艺", base: 20 },      
+                1: { name: "初级名录", base: 80 },      
+                2: { name: "高档珍玩", base: 300 },     
+                3: { name: "馆藏泰斗", base: 1500 },    
+                4: { name: "镇馆孤品", base: 8000 }     
             };
 
             const setRarityDict = {
@@ -436,7 +391,6 @@
                         let noun = nouns[(i * 7) % nouns.length];
                         let itemName = `${pfx}·${noun}`;
 
-                        // 保持指数暴涨曲线不变：指数的基数在后段会无限扩大反差
                         let mapWeight = Math.pow(2.2, mId - 1);
                         let finalVal = Math.floor(rarityDict[rarity].base * mapWeight * (0.85 + ((i * 13) % 30) / 100));
 
@@ -449,7 +403,6 @@
                     }
                 }
 
-                // 注入动漫集换式卡牌地图 10 
                 lootTables.value[10] = [];
                 const animMapName = "秋叶原·动漫文化前线";
 
@@ -488,7 +441,6 @@
 
                 const cardInjector = (arr) => {
                     arr.forEach((meta, idx) => {
-                        // 秋叶原相当于地图2的加成系数
                         let finalVal = Math.floor(rarityDict[meta.r].base * 2.2 * (0.92 + ((idx * 19) % 20) / 100));
                         const cardObj = {
                             name: meta.n, rarity: meta.r, rarityName: rarityDict[meta.r].name,
@@ -503,7 +455,6 @@
                 cardInjector(pokemonNames);
                 cardInjector(opNames);
 
-                // 生成基础图鉴
                 for (let sIdx = 0; sIdx < 25; sIdx++) {
                     let setRarity = sIdx % 4;
                     let setCompItems = [];
@@ -514,12 +465,11 @@
                         setCompItems.push(pool[idx].name);
                     }
                     sets.value.push({
-                        name: `古玩经典第 ${sIdx + 1} 辑套装`, rarity: setRarity, 
+                        name: `古玩经典第 ${sIdx + 1} 辑`, rarity: setRarity, 
                         realRarityName: setRarityDict[setRarity].name, bonus: 1000 * (sIdx + 1), items: setCompItems
                     });
                 }
 
-                // 重新适配高罕图鉴奖励数值，使其成为前期突破的主要驱动力
                 sets.value.push({
                     name: "🏮 水浒传：梁山天罡神卡组", rarity: 2, realRarityName: "史诗套装", bonus: 15000,
                     items: ["天魁星·及时雨·宋江(限量金箔)", "天罡星·玉麒麟·卢俊义", "天机星·智多星·吴用", "天雄星·豹子头·林冲"]
@@ -534,7 +484,7 @@
                 });
 
                 sets.value.push({
-                    name: "🎮 宝可梦：初代御三家梦幻组合", rarity: 1, realRarityName: "稀有套装", bonus: 6000,
+                    name: "🎮 宝可梦：初代御三家梦幻", rarity: 1, realRarityName: "稀有套装", bonus: 6000,
                     items: ["喷火龙(第一弹限量BaseSet)", "水箭龟(无阴影错版卡)", "妙蛙种子(初版全息)"]
                 });
                 sets.value.push({
@@ -547,7 +497,7 @@
                 });
 
                 sets.value.push({
-                    name: "🏴‍裂 海贼王：草帽一伙悬赏全集", rarity: 1, realRarityName: "稀有套装", bonus: 7000,
+                    name: "🏴‍裂 海贼王：草帽悬赏全集", rarity: 1, realRarityName: "稀有套装", bonus: 7000,
                     items: ["蒙奇·D·路飞(五档太阳神尼卡特绘)", "罗罗诺亚·索隆(三刀流奥义全息)", "文斯莫克·山治(魔神风脚)", "托尼托尼·乔巴(樱花奇迹赏)"]
                 });
                 sets.value.push({
@@ -555,28 +505,13 @@
                     items: ["哥尔·D·罗杰(海贼王传奇孤品)", "爱德华·纽盖特(白胡子震动错版)", "香克斯(红发霸王色缠绕)", "马歇尔·D·蒂奇(黑胡子双果实)"]
                 });
                 sets.value.push({
-                    name: "🏴‍裂 海贼王：王下七武海巅峰阵", rarity: 2, realRarityName: "史诗套装", bonus: 20000,
+                    name: "🏴‍裂 海贼王：七武海巅峰阵", rarity: 2, realRarityName: "史诗套装", bonus: 20000,
                     items: ["鹰眼·米霍克(世界第一黑刀)", "波雅·汉库克(女帝芳香脚亲签)", "唐吉诃德·多弗朗明哥(天夜叉线线)"]
-                });
-
-                sets.value.push({
-                    name: "🌟 次元打破·三界魁首终极聚首", rarity: 3, realRarityName: "传说套装", bonus: 100000,
-                    items: [
-                        "天魁星·及时雨·宋江(限量金箔)", 
-                        "初世代·皮卡丘(元祖初版闪卡)", 
-                        "蒙奇·D·路飞(五档太阳神尼卡特绘)"
-                    ]
                 });
             };
 
             const hasItemInShowcase = (itemName) => showcase.value.some(i => i.name === itemName);
             const isSetComplete = (set) => set.items.every(itemName => hasItemInShowcase(itemName));
-            
-            const getItemHoverTitle = (itemName) => {
-                const item = globalItemMap[itemName];
-                if (!item) return itemName;
-                return `【${itemName}】\n考查产地：${item.mapName}\n馆藏评值：￥${item.value.toLocaleString()}`;
-            };
 
             const filteredSets = computed(() => {
                 if (activeTab.value === 0) return sets.value;
@@ -601,10 +536,10 @@
 
             const museumTitle = computed(() => {
                 const val = totalMuseumValue.value;
-                if (val < 2000) return "🏡 街头文玩摊位";
-                if (val < 30000) return "🏛️ 地方文物陈列馆";
-                if (val < 500000) return "👑 跨国甲等文博艺术中心";
-                return "🌟 全球至尊皇家级神殿";
+                if (val < 2000) return "🏡 街头文玩";
+                if (val < 30000) return "🏛️ 陈列馆";
+                if (val < 500000) return "👑 艺术中心";
+                return "🌟 至尊神殿";
             });
 
             const toggleGroup = (groupId) => {
@@ -636,9 +571,9 @@
                 if (displayGroupMode.value === 'map') {
                     const mapBucket = {};
                     maps.forEach(m => {
-                        mapBucket[m.name] = { id: `map-${m.id}`, title: `📍 ${m.name}`, list: [] };
+                        mapBucket[m.name] = { id: `map-${m.id}`, title: `📍 ${m.name.split('·')[0]}`, list: [] };
                     });
-                    mapBucket["未知来源"] = { id: "map-unknown", title: "❓ 未知路线来源", list: [] };
+                    mapBucket["未知来源"] = { id: "map-unknown", title: "❓ 未知来源", list: [] };
 
                     showcase.value.forEach((item, index) => {
                         const tgtBucket = mapBucket[item.originMap] || mapBucket["未知来源"];
@@ -652,17 +587,17 @@
 
             const addLog = (msg) => {
                 logs.value.unshift(msg);
-                if (logs.value.length > 25) logs.value.pop();
+                if (logs.value.length > 10) logs.value.pop();
             };
 
             const selectMap = (map) => {
                 if (totalMuseumValue.value < map.reqValue) {
-                    alert(`🔒 门槛不达标！该高级路线由于安保及身份限制，需要总馆值达到 [${map.reqValue.toLocaleString()}]。请继续经营前置场馆或凑齐共鸣图鉴！`);
+                    alert(`🔒 门槛不达标！需要总馆值达到 [${map.reqValue.toLocaleString()}]。`);
                     return;
                 }
                 currentMapId.value = map.id;
                 recentFoundItem.value = null; 
-                addLog(`🎯 <b>线路跳转</b>：考查队已经转战至【${map.name}】进行深挖。`);
+                addLog(`🎯 转战至【${map.name.split('·')[0]}】进行深挖。`);
             };
 
             const handleHuntingWorkflow = () => {
@@ -675,14 +610,14 @@
 
             const startHunting = () => {
                 const map = maps.find(m => m.id === currentMapId.value);
-                if (energy.value <= 0) return alert("精力消耗殆尽，请稍事休息或饮茶补满！");
-                if (money.value < map.cost) return alert("商号流动资金不足以支付本段路线的考察成本！");
+                if (energy.value <= 0) return alert("精力消耗殆尽，请稍事休息！");
+                if (money.value < map.cost) return alert("商号流动资金不足！");
 
                 energy.value--;
                 money.value -= map.cost;
                 isSearching.value = true;
 
-                const randomDuration = Math.floor(Math.random() * (600 - 350 + 1)) + 350; 
+                const randomDuration = Math.floor(Math.random() * (500 - 300 + 1)) + 300; 
 
                 setTimeout(() => {
                     const pool = lootTables.value[map.id];
@@ -712,7 +647,7 @@
                     isSearching.value = false;
                     recentFoundItem.value = finalItem;
 
-                    addLog(`✨ <b>考查捷报</b>：在【${map.name}】成功入手 <span class="rarity-${finalItem.rarity}">[${finalItem.rarityName}] ${finalItem.name}</span>！`);
+                    addLog(`✨ 入手 <span class="rarity-${finalItem.rarity}">[${finalItem.rarityName}] ${finalItem.name}</span>！`);
                 }, randomDuration);
             };
 
@@ -722,33 +657,24 @@
                 
                 showcase.value.unshift(item);
                 bag.value.splice(index, 1);
-                addLog(`🏛️ <b>展位陈列</b>：【${item.name}】正式移入常设展厅！`);
-
-                sets.value.forEach(set => {
-                    if (set.items.includes(item.name) && isSetComplete(set)) {
-                        addLog(`🎉 <b class="text-yellow-500">【突破次元壁·图鉴共鸣】</b> 达成：<b>${set.name}</b>！获得大额馆值加成 <b>+${set.bonus.toLocaleString()}</b>！`);
-                    }
-                });
+                addLog(`🏛️ 【${item.name}】移入展厅！`);
             };
 
             const moveToBag = (globalIndex) => {
                 const item = showcase.value[globalIndex];
                 showcase.value.splice(globalIndex, 1);
                 bag.value.unshift(item);
-                addLog(`📦 <b>下架撤回</b>：将【${item.name}】撤回暂存箱。`);
             };
 
             const moveToBagFromFlat = (index) => {
                 const item = showcase.value[index];
                 showcase.value.splice(index, 1);
                 bag.value.unshift(item);
-                addLog(`📦 <b>下架撤回</b>：将【${item.name}】撤回暂存箱。`);
             };
 
             const sellFromBag = (index) => {
                 const item = bag.value[index];
                 money.value += item.value;
-                addLog(`💸 <b>市场结汇</b>：出售【${item.name}】，回笼商号资金 ￥${item.value.toLocaleString()}`);
                 bag.value.splice(index, 1);
             };
 
@@ -764,16 +690,15 @@
                     }
                 });
 
-                // 配合新的严苛环境注入更多基础藏品，并给与 300 万调试金
                 const allItems = Object.values(globalItemMap);
-                for(let i=0; i<60; i++){
+                for(let i=0; i<30; i++){
                     const randomItem = allItems[Math.floor(Math.random() * allItems.length)];
                     if(!hasItemInShowcase(randomItem.name)) {
                         showcase.value.unshift({...randomItem});
                     }
                 }
                 money.value += 3000000; 
-                addLog("✨ <b>调试注入</b>：强行灌注大量中后期展品组合，并注入 300 万元现金供高级长线测试！");
+                addLog("✨ 注入大批中后期展品 + 300万测试金！");
             };
 
             onMounted(() => {
@@ -786,10 +711,11 @@
             });
 
             return {
+                mobileTab,
                 money, energy, maxEnergy, currentMapId, maps, sortedMaps, bag, showcase, logs,
                 baseMuseumValue, setBonusValue, totalMuseumValue, museumTitle, sets, completedSetsCount,
                 hasItemInShowcase, isSetComplete, selectMap, startHunting, moveToShowcase, moveToBag, moveToBagFromFlat, sellFromBag,
-                getMapProgress, getMapCollectedCount, getItemHoverTitle, activeTab, tabOptions, filteredSets, cheatCollect,
+                getMapProgress, getMapCollectedCount, activeTab, tabOptions, filteredSets, cheatCollect,
                 energyProgress, energyTimerText, isSearching, recentFoundItem, handleHuntingWorkflow,
                 displayGroupMode, groupedShowcase, toggleGroup, isGroupCollapsed
             };
