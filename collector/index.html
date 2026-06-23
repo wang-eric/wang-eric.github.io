@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>博古大师：环球寻宝 v10.1 - 华夏至尊与异域流光全量安全版</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="data.js"></script>
+    
+    <style>
+        /* 稀有度与流光特效重构 */
+        .rarity-0 { color: #6b7280; } 
+        .rarity-1 { color: #10b981; font-weight: 600; } 
+        .rarity-2 { color: #2563eb; font-weight: bold; } 
+        .rarity-3 { color: #9333ea; font-weight: bold; text-shadow: 0 0 4px rgba(147,51,234,0.2); } 
+        .rarity-4 { color: #d97706; font-weight: bold; text-shadow: 0 0 8px rgba(217,119,6,0.5); }
+        
+        .card-rarity-0 { border-color: #e5e7eb; background: #f9fafb; }
+        .card-rarity-1 { border-color: #86efac; background: linear-gradient(to bottom right, #f0fdf4, #f8fafc); }
+        .card-rarity-2 { border-color: #93c5fd; background: linear-gradient(to bottom right, #eff6ff, #f8fafc); }
+        .card-rarity-3 { border-color: #c084fc; background: linear-gradient(to bottom right, #faf5ff, #f8fafc); }
+        .card-rarity-4 { border-color: #fde047; background: linear-gradient(to bottom right, #fffbeb, #fffdf5); position: relative; }
+        .card-rarity-4::after { content: ''; position: absolute; inset: 0; border-radius: 11px; box-shadow: inset 0 0 8px rgba(253,224,71,0.4); pointer-events: none; }
+
+        .s-complete { border-color: #f59e0b !important; background: linear-gradient(to bottom right, #fef3c7, #fffdf5) !important; color: #78350f !important; border-width: 2px !important; }
+        .s-uncomplete { border-color: #e5e7eb; background-color: #f9fafb; color: #4b5563; }
+        
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #f5f5f4; }
+        ::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 2px; }
+
+        @keyframes pulse-scan {
+            0% { transform: scale(0.97); opacity: 0.6; }
+            50% { transform: scale(1.03); opacity: 0.9; }
+            100% { transform: scale(0.97); opacity: 0.6; }
+        }
+        .anim-hunting { animation: pulse-scan 0.8s infinite ease-in-out; }
+        .mobile-panel-height { height: calc(100vh - 430px); min-height: 350px; }
+    </style>
+</head>
+<body class="bg-stone-100 p-1 font-sans text-zinc-800 antialiased select-none">
+
+<div id="app" class="w-full max-w-md mx-auto bg-stone-50 rounded-xl shadow-lg border-2 border-stone-800 overflow-hidden min-h-screen flex flex-col">
+    
+    <div class="bg-stone-900 text-amber-100 p-3 border-b-2 border-amber-800 shrink-0">
+        <div class="flex justify-between items-center">
+            <div class="flex items-center gap-1.5">
+                <h1 class="text-lg font-serif font-bold tracking-wider text-amber-400">🏛️ 博古大师</h1>
+                <span class="text-[10px] bg-amber-600 text-stone-900 px-1.5 py-0.2 rounded-full font-mono font-bold scale-90">v10.1</span>
+            </div>
+            <div class="text-right">
+                <span class="text-xs text-stone-400">评级:</span>
+                <span class="text-yellow-400 font-bold text-xs ml-1">{{ museumTitle }}</span> 
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-3 gap-1.5 mt-2 font-mono text-center">
+            <div class="bg-stone-800/90 p-1.5 rounded border border-stone-700">
+                <div class="text-[10px] text-stone-400 scale-90">🏛️ 全量总馆值</div>
+                <div class="text-sm font-bold text-emerald-400 truncate">{{ totalMuseumValue?.toLocaleString() }}</div>
+                <div class="text-[10px] text-stone-400 mt-0.5">含羁绊加成：<span class="text-yellow-300 font-semibold">+{{ totalSetBonusValue?.toLocaleString() }}</span></div>
+            </div>
+            <div class="bg-stone-800/90 p-1.5 rounded border border-stone-700">
+                <div class="text-[10px] text-stone-400 scale-90">💰 流动商资</div>
+                <div class="text-sm font-bold text-yellow-400 truncate">￥{{ money?.toLocaleString() }}</div>
+            </div>
+            <div class="bg-stone-800/90 p-1.5 rounded border border-stone-700">
+                <div class="text-[10px] text-stone-400 scale-90 flex justify-center gap-1">
+                    <span>🔋 精力</span>
+                    <span class="text-amber-400 scale-90">{{ energyTimerText?.replace('⏳ 恢复: ','') }}</span>
+                </div>
+                <div class="text-xs text-stone-200 font-bold mt-0.5 flex items-center justify-center gap-1">
+                    <span>{{ energy }}/{{ maxEnergy }}</span>
+                    <div class="w-8 bg-stone-700 h-1 rounded-full overflow-hidden inline-block">
+                        <div class="bg-amber-400 h-full" :style="{ width: (energyProgress / 5 * 100) + '%' }"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="p-3 bg-white border-b border-stone-200 shrink-0 shadow-sm">
+        <div class="flex justify-between items-center mb-1">
+            <span class="text-xs text-stone-500 font-serif bg-stone-100 px-2 py-0.5 rounded truncate max-w-[200px]">
+                📍 <b>{{ maps.find(m => m.id === currentMapId)?.name || '未选定区域' }}</b>
+            </span>
+            <span class="text-[11px] text-stone-400 font-mono">单次派遣: ￥{{ maps.find(m => m.id === currentMapId)?.cost?.toLocaleString() }}</span>
+        </div>
+
+        <div class="h-32 flex items-center justify-center bg-stone-50 border border-stone-200 rounded-xl relative overflow-hidden my-2">
+            <div v-if="!isSearching && !recentFoundItem" class="text-center p-2">
+                <div class="text-2xl mb-1">🏺</div>
+                <p class="text-[11px] text-stone-500">200种传世孤品与世界名画已加入寻宝池</p>
+            </div>
+
+            <div v-if="isSearching" class="text-center">
+                <div class="w-12 h-12 rounded-full bg-amber-600 text-white flex items-center justify-center text-xl mx-auto shadow anim-hunting">👁️</div>
+                <p class="text-xs font-serif text-amber-800 font-bold mt-2 animate-pulse">古籍辨伪与名画断代中...</p>
+            </div>
+
+            <div v-if="!isSearching && recentFoundItem" class="text-center w-full max-w-xs px-3 py-2 relative">
+                <div class="absolute top-0 right-0 bg-red-600 text-white text-[9px] font-bold px-1.5 py-0.2 rounded-bl">已鉴定</div>
+                <div class="text-xl mb-0.5">
+                    <span v-if="recentFoundItem?.type==='oil_painting'">🖼️</span>
+                    <span v-else-if="recentFoundItem?.type==='ancient_book'">📜</span>
+                    <span v-else-if="recentFoundItem?.type==='porcelain'">🏺</span>
+                    <span v-else>💎</span>
+                </div>
+                <h4 :class="['font-serif font-bold text-xs truncate', 'rarity-' + recentFoundItem?.rarity]">{{ recentFoundItem?.name }}</h4>
+                <div class="text-[10px] text-stone-500 font-mono mt-0.5">
+                    基础价值: <span class="text-emerald-600 font-bold">￥{{ recentFoundItem?.value?.toLocaleString() }}</span>
+                </div>
+                <p class="text-[9px] text-stone-400 truncate mt-0.5 italic">{{ recentFoundItem?.historyEra || recentFoundItem?.typeName }}</p>
+            </div>
+        </div>
+
+        <button @click="handleHuntingWorkflow" 
+                :disabled="isSearching"
+                :class="['w-full font-serif font-bold py-3 text-sm rounded-xl shadow-md transition active:scale-95 select-none',
+                         isSearching ? 'bg-stone-300 text-stone-500 cursor-not-allowed' : 
+                         recentFoundItem ? 'bg-gradient-to-b from-emerald-600 to-emerald-700 text-white' : 
+                         'bg-gradient-to-b from-amber-600 to-amber-700 text-white']">
+            <span v-if="isSearching">🔍 小队深度发掘中...</span>
+            <span v-else-if="recentFoundItem">收下入库并继续派遣</span>
+            <span v-else>🗺️ 派遣考察队解封盲盒</span>
+        </button>
+
+        <div class="grid grid-cols-2 gap-2 mt-2">
+            <button @click="energy = maxEnergy" class="bg-stone-800 text-amber-100 text-[10px] py-1 rounded-md">☕ 行气饮茶满精力</button>
+            <button @click="cheatInjectAll" class="bg-amber-100 text-amber-800 text-[10px] py-1 rounded-md">✨ 诸神黄昏：全量全开调试</button>
+        </div>
+    </div>
+
+    <div class="bg-stone-200 p-1 flex border-b border-stone-300 shrink-0 text-xs font-serif font-bold">
+        <button @click="mobileTab = 'showcase'" :class="['flex-1 py-2 text-center rounded-lg transition', mobileTab === 'showcase' ? 'bg-white text-stone-900 shadow-xs' : 'text-stone-600']">🏛️ 常设展厅 ({{ showcase.length }})</button>
+        <button @click="mobileTab = 'bag'" :class="['flex-1 py-2 text-center rounded-lg transition', mobileTab === 'bag' ? 'bg-white text-stone-900 shadow-xs' : 'text-stone-600']">📦 暂存箱 ({{ bag.length }})</button>
+        <button @click="mobileTab = 'sets'" :class="['flex-1 py-2 text-center rounded-lg transition', mobileTab === 'sets' ? 'bg-white text-stone-900 shadow-xs' : 'text-stone-600']">📜 梦幻羁绊 ({{ completedSetsCount }})</button>
+        <button @click="mobileTab = 'maps'" :class="['flex-1 py-2 text-center rounded-lg transition', mobileTab === 'maps' ? 'bg-white text-stone-900 shadow-xs' : 'text-stone-600']">📍 寻宝大图</button>
+    </div>
+    <div class="flex-1 overflow-y-auto p-3 mobile-panel-height bg-stone-50">
+        
+        <div v-if="mobileTab === 'showcase'" class="space-y-3">
+            <div class="flex items-center gap-1 bg-stone-200/60 p-1 rounded-lg text-[11px]">
+                <button @click="displayGroupMode = 'none'" :class="['flex-1 py-1 rounded text-center transition', displayGroupMode === 'none' ? 'bg-white font-bold text-stone-900' : 'text-stone-600']">完全平铺</button>
+                <button @click="displayGroupMode = 'type'" :class="['flex-1 py-1 rounded text-center transition', displayGroupMode === 'type' ? 'bg-white font-bold text-stone-900' : 'text-stone-600']">📂 分类陈列</button>
+                <button @click="displayGroupMode = 'rarity'" :class="['flex-1 py-1 rounded text-center transition', displayGroupMode === 'rarity' ? 'bg-white font-bold text-stone-900' : 'text-stone-600']">💎 稀有等级</button>
+            </div>
+
+            <div v-if="showcase.length === 0" class="text-center text-stone-400 py-12 text-xs italic">展厅尚无陈列，请从暂存箱上架传世珍玩。</div>
+            
+            <div v-if="displayGroupMode === 'none'" class="space-y-2">
+                <div v-for="(item, idx) in showcase" :key="'flat-'+idx" :class="['p-2.5 rounded-xl border text-xs flex justify-between items-center shadow-2xs', 'card-rarity-' + (item?.rarity || 0)]">
+                    <div class="min-w-0 flex-1 pr-2">
+                        <div class="flex items-center gap-1">
+                            <span class="text-[10px] bg-stone-200 text-stone-700 px-1 rounded">{{ item?.typeName || '未知' }}</span>
+                            <span :class="['font-bold text-xs truncate block', 'rarity-' + (item?.rarity || 0)]">{{ item?.name }}</span>
+                        </div>
+                        <div class="text-[10px] text-stone-500 mt-0.5 truncate">
+                            🎖️ 注入馆值: <span class="text-emerald-700 font-semibold">+{{ item?.value?.toLocaleString() }}</span> | 来源: {{ item?.originMap || '未知' }}
+                        </div>
+                    </div>
+                    <button @click="moveToBagFromFlat(idx)" class="bg-stone-200 text-stone-700 px-2 py-1 rounded text-[11px] font-medium shrink-0 active:bg-stone-300">下架撤回</button>
+                </div>
+            </div>
+
+            <div v-else v-for="group in groupedShowcase" :key="group.id" class="space-y-1.5">
+                <div @click="toggleGroup(group.id)" class="text-xs font-bold text-stone-700 bg-stone-200/80 px-2 py-1.5 rounded flex justify-between items-center sticky top-0 z-10 cursor-pointer">
+                    <span>{{ group.title }} ({{ group.list?.length || 0 }})</span>
+                    <span class="text-[10px] text-stone-400">{{ isGroupCollapsed(group.id) ? '展开 🔽' : '收起 🔼' }}</span>
+                </div>
+                
+                <div v-show="!isGroupCollapsed(group.id)" class="space-y-1.5 pl-1">
+                    <div v-for="wrapper in group.list" :key="wrapper.globalIndex" :class="['p-2.5 rounded-xl border text-xs flex justify-between items-center shadow-2xs', 'card-rarity-' + (wrapper.item?.rarity || 0)]">
+                        <div class="min-w-0 flex-1 pr-2">
+                            <span :class="['font-bold text-xs truncate block', 'rarity-' + (wrapper.item?.rarity || 0)]">{{ wrapper.item?.name }}</span>
+                            <div class="text-[10px] text-stone-500 mt-0.5 truncate">
+                                🎖️ 馆值: +{{ wrapper.item?.value?.toLocaleString() }} | {{ wrapper.item?.historyEra || '时代不详' }}
+                            </div>
+                        </div>
+                        <button @click="moveToBag(wrapper.globalIndex)" class="bg-stone-200 text-stone-700 px-2 py-1 rounded text-[11px] shrink-0 active:bg-stone-300">下架撤回</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="mobileTab === 'bag'" class="space-y-2">
+            <div v-if="bag.length === 0" class="text-center text-stone-400 py-12 text-xs italic">暂存箱空空如也，请派遣考察队发掘盲盒。</div>
+            <div v-for="(item, idx) in bag" :key="idx" :class="['p-2.5 rounded-xl border text-xs flex flex-col shadow-2xs', 'card-rarity-' + (item?.rarity || 0)]">
+                <div class="flex justify-between items-center">
+                    <span :class="['font-bold text-xs truncate flex-1 pr-1', 'rarity-' + (item?.rarity || 0)]">{{ item?.name }}</span>
+                    <span class="text-[10px] bg-stone-100 px-1.5 py-0.5 rounded text-stone-600 border border-stone-200 shrink-0">{{ item?.rarityName || '普通' }}</span>
+                </div>
+                <div class="text-[10px] text-stone-500 mt-1 truncate">{{ item?.artStatus || item?.historyDesc || '暂无历史断代背景描述。' }}</div>
+                <div class="flex justify-between items-center mt-2 pt-1.5 border-t border-stone-200/40">
+                    <div class="text-[11px] text-stone-500 font-mono">
+                        黑市开价: <b class="text-stone-800">￥{{ item?.value?.toLocaleString() }}</b>
+                    </div>
+                    <div class="flex gap-1.5">
+                        <button @click="sellFromBag(idx)" class="bg-red-50 text-red-700 px-2.5 py-1 rounded text-[11px] font-medium active:bg-red-100">💸 变现</button>
+                        <button v-if="!hasItemInShowcase(item?.name)" @click="moveToShowcase(idx)" class="bg-emerald-600 text-white px-2.5 py-1 rounded text-[11px] font-medium active:bg-emerald-700">🏛️ 上架展陈</button>
+                        <span v-else class="text-[10px] text-stone-400 self-center bg-stone-100 px-1.5 py-0.5 rounded">展柜已有</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="mobileTab === 'sets'" class="space-y-3">
+            <div class="flex flex-wrap gap-1 text-[11px]">
+                <button v-for="(tab, idx) in tabOptions" :key="idx" @click="activeTab = idx" :class="['px-2 py-1 rounded transition', activeTab === idx ? 'bg-stone-800 text-white font-bold' : 'bg-stone-200 text-stone-600']">
+                    {{ tab }}
+                </button>
+            </div>
+
+            <div class="space-y-2">
+                <div v-for="set in filteredSets" :key="set.name" :class="['p-2.5 rounded-xl border text-xs relative transition-all', isSetComplete(set) ? 's-complete ring-2 ring-amber-500' : 's-uncomplete']">
+                    <div class="flex justify-between font-bold items-center border-b border-stone-200/30 pb-1 mb-1">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <span class="font-serif text-[11px] truncate max-w-[180px]">📜 {{ set.name }}</span>
+                            <span :class="['text-[9px] px-2 py-0.5 rounded-full font-mono border', getSetRarityClass(set)]">
+                                {{ getSetRarityName(set) }}
+                            </span>
+                        </div>
+                        <span :class="['text-[9px] px-1.5 py-0.2 rounded font-mono', isSetComplete(set) ? 'bg-amber-600 text-white animate-pulse' : 'bg-stone-200 text-stone-500']">
+                            {{ getSetActivatedCount(set) }}/{{ set.reqCount }} {{ isSetComplete(set) ? '完美激活' : '搜集链条未齐' }}
+                        </span>
+                    </div>
+                    <div class="text-[10px] font-mono mb-1.5 opacity-90">
+                        ⚡ 套装共鸣奖励: <b class="font-bold text-emerald-600">{{ set.buff }}</b>
+                        <span v-if="set.bonusValue" class="text-stone-500">| +{{ set.bonusValue.toLocaleString() }} 馆值</span>
+                    </div>
+                    <div class="grid grid-cols-1 gap-1">
+                        <div v-for="reqName in set.items" :key="reqName" :class="['text-[10px] px-2 py-0.5 rounded border flex justify-between items-center truncate', hasItemInShowcase(reqName) ? 'border-emerald-500 bg-emerald-50 text-emerald-800 font-medium' : 'border-stone-200 text-stone-400 bg-white/40']">
+                            <span class="truncate pr-1">{{ reqName }}</span>
+                            <span class="font-mono shrink-0 font-bold">{{ hasItemInShowcase(reqName) ? '✓ 已上架' : '× 未解封' }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="mobileTab === 'maps'" class="space-y-2">
+            <div v-for="map in sortedMaps" :key="map.id" 
+                 @click="selectMap(map)"
+                 :class="['p-2.5 rounded-xl border-2 transition-all relative cursor-pointer', 
+                          currentMapId === map.id ? 'border-amber-600 bg-amber-50/50' : 'border-stone-200 bg-white']">
+                
+                <div class="flex justify-between items-center">
+                    <span class="font-serif font-bold text-xs text-stone-900 flex items-center gap-0.5 truncate max-w-[200px]">
+                        <span v-if="currentMapId === map.id">📍</span>{{ map.name }}
+                    </span>
+                    <span class="text-[10px] text-stone-500 font-mono bg-stone-100 px-1.5 py-0.5 rounded">发掘开销: ￥{{ map.cost?.toLocaleString() }}</span>
+                </div>
+
+                <div class="mt-1.5 flex items-center justify-between text-[11px] text-stone-500">
+                    <span>本区域图鉴解锁在展: <b class="text-stone-700 font-mono">{{ getMapCollectedCount(map.id) }}</b> / <b class="text-stone-700 font-mono">{{ getMapTotalCount(map.id) }}</b> 种</span>
+                    <span class="font-mono font-bold text-amber-700">{{ getMapProgress(map.id) }}%</span>
+                </div>
+
+                <div class="text-[11px] mt-1.5 flex justify-between items-center pt-1 border-t border-dashed border-stone-200">
+                    <span v-if="totalMuseumValue >= map.reqValue" class="text-emerald-600 font-medium text-[10px]">✓ 考查许可已签发</span>
+                    <span v-else class="text-red-500 font-bold bg-red-50 px-1.5 py-0.5 rounded text-[10px]">🔒 封锁门槛：总馆值需达 ≥{{ map.reqValue?.toLocaleString() }}</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="h-11 bg-stone-900 p-1.5 text-stone-300 font-mono text-[10px] space-y-0.5 overflow-y-auto shrink-0 border-t border-stone-800">
+        <div v-for="(log, idx) in logs.slice(0, 5)" :key="idx" v-html="log" class="truncate opacity-90"></div>
+    </div>
+</div>
+
+<script>
+    const { createApp, ref, computed, onMounted, onBeforeUnmount } = Vue;
+
+    // 本地容器（在 data.js 未加载时保持空）
+    const localItemsDB = {};
+    const localSetsDB = {};
+
+    // 把 data.js 中可能的命名写入本地容器（可重复安全调用）
+    function applyDataToLocalDBs() {
+        // Primary source: globalItemMap defined in data.js
+        if (typeof globalItemMap !== 'undefined' && globalItemMap) Object.assign(localItemsDB, globalItemMap);
+        // Secondary source: globalSetMap defined in data.js
+        if (typeof globalSetMap !== 'undefined' && globalSetMap) Object.assign(localSetsDB, globalSetMap);
+    }
+
+    // 将原有的 createApp 内容封装为 initApp，确保只在准备好后调用一次
+    function initApp() {
+        applyDataToLocalDBs();
+        createApp({
+            setup() {
+            const mobileTab = ref('showcase'); 
+            const money = ref(100000); 
+            const energy = ref(100);
+            const maxEnergy = 100;
+            const currentMapId = ref(1);
+            
+            const isSearching = ref(false);
+            const recentFoundItem = ref(null);
+            const energyProgress = ref(0); 
+            let timerToken = null;
+
+            const bag = ref([]);        
+            const showcase = ref([]);   
+            const logs = ref(["⚙️ 安全重构完成：全库可选链(?.)防护网部署完毕。"]);
+
+            const displayGroupMode = ref('none');
+            const activeTab = ref(0);
+            const tabOptions = ["全部", "潘家园", "景德镇", "故宫", "秋叶原", "卢浮宫", "纽约", "环球探险"];
+            const collapsedGroups = ref({});
+
+            const maps = [
+                // increased unlock thresholds for much slower progression
+                { id: 1, name: "华夏古玩 · 潘家园与西市地摊", cost: 200, reqValue: 0, types: ["jade", "porcelain", "stamp_coin", "book", "painting"] },
+                { id: 2, name: "江南雅韵 · 景德镇御瓷遗址", cost: 1200, reqValue: 1500000000, types: ["porcelain"] },
+                { id: 3, name: "神州文脉 · 故宫与文渊阁密藏", cost: 5000, reqValue: 10000000, types: ["ancient_book"] },
+                { id: 4, name: "秋叶原 · 动漫周边与卡牌前线", cost: 15000, reqValue: 50000000, types: ["tcg_card"] },
+                { id: 5, name: "巴黎 · 卢浮宫与德鲁奥高阶大拍", cost: 50000, reqValue: 250000000, types: ["oil_painting"] },
+                { id: 6, name: "纽约 · 苏富比与现代艺术大拍", cost: 200000, reqValue: 1000000000, types: ["oil_painting", "tcg_card"] },
+                { id: 7, name: "环球探险 · 至尊终极盲盒全量熔炉", cost: 800000, reqValue: 5000000000, types: ["bronze", "jade_artifact", "porcelain", "ancient_book", "tcg_card", "oil_painting"] }
+            ];
+
+            const sortedMaps = computed(() => [...maps].sort((a, b) => a.reqValue - b.reqValue));
+
+            const energyTimerText = computed(() => {
+                if (energy.value >= maxEnergy) return "✨ 精力充沛";
+                return `⏳ 恢复: ${5 - Math.floor(energyProgress.value)}s`;
+            });
+
+            const startEnergyRegen = () => {
+                timerToken = setInterval(() => {
+                    if (energy.value < maxEnergy) {
+                        energyProgress.value += 0.5;
+                        if (energyProgress.value >= 5) {
+                            energy.value++;
+                            energyProgress.value = 0;
+                        }
+                    } else { energyProgress.value = 0; }
+                }, 500);
+            };
+
+            const hasItemInShowcase = (itemName) => {
+                if (!itemName) return false;
+                return showcase.value.some(i => i && i.name === itemName);
+            };
+            
+            const getSetActivatedCount = (set) => {
+                if (!set || !set.items) return 0;
+                return set.items.filter(itemName => hasItemInShowcase(itemName)).length;
+            };
+
+            const isSetComplete = (set) => {
+                if (!set) return false;
+                return getSetActivatedCount(set) >= (set.reqCount || 1);
+            };
+
+            const getSetMaxRarity = (set) => {
+                if (!set || !Array.isArray(set.items)) return 0;
+                return set.items.reduce((max, itemName) => {
+                    const item = localItemsDB[itemName];
+                    return Math.max(max, item?.rarity || 0);
+                }, 0);
+            };
+
+            const getSetRarityName = (set) => {
+                const rarity = getSetMaxRarity(set);
+                if (rarity >= 4) return '传奇';
+                if (rarity === 3) return '史诗';
+                if (rarity === 2) return '罕见';
+                if (rarity === 1) return '精工';
+                return '普通';
+            };
+
+            const getSetRarityClass = (set) => {
+                const rarity = getSetMaxRarity(set);
+                switch (rarity) {
+                    case 4: return 'bg-amber-100 text-amber-800 border-amber-200';
+                    case 3: return 'bg-violet-100 text-violet-800 border-violet-200';
+                    case 2: return 'bg-sky-100 text-sky-800 border-sky-200';
+                    case 1: return 'bg-stone-100 text-stone-700 border-stone-200';
+                    default: return 'bg-stone-50 text-stone-500 border-stone-200';
+                }
+            };
+
+            const setAppearsInMap = (set, mapId) => {
+                if (!set || !Array.isArray(set.items)) return false;
+                return set.items.some(itemName => {
+                    const item = localItemsDB[itemName];
+                    return item && Array.isArray(item.maps) && item.maps.includes(mapId);
+                });
+            };
+
+            const filteredSets = computed(() => {
+                const allSets = Object.values(localSetsDB);
+                if (activeTab.value === 0) return allSets;
+                const mapId = activeTab.value;
+                return allSets.filter(set => setAppearsInMap(set, mapId));
+            });
+
+            // Count items that explicitly list this map in their `maps` array
+            const getMapCollectedCount = (mapId) => {
+                const map = maps.find(m => m.id === mapId);
+                if (!map) return 0;
+                return Object.values(localItemsDB).filter(item => item && Array.isArray(item.maps) && item.maps.includes(mapId) && hasItemInShowcase(item.name)).length;
+            };
+
+            const getMapTotalCount = (mapId) => {
+                const map = maps.find(m => m.id === mapId);
+                if (!map) return 0;
+                return Object.values(localItemsDB).filter(item => item && Array.isArray(item.maps) && item.maps.includes(mapId)).length;
+            };
+
+            // Progress is based on the explicit per-map catalog in data.js
+            const getMapProgress = (mapId) => {
+                const map = maps.find(m => m.id === mapId);
+                if (!map) return 0;
+                const totalInMap = getMapTotalCount(mapId);
+                if (totalInMap === 0) return 100;
+                return Math.floor((getMapCollectedCount(mapId) / totalInMap) * 100);
+            };
+
+            const totalSetBonusValue = computed(() => Object.values(localSetsDB)
+                .filter(s => isSetComplete(s))
+                .reduce((sum, set) => sum + (set?.bonusValue || 0), 0));
+
+            const completedSetsCount = computed(() => Object.values(localSetsDB).filter(s => isSetComplete(s)).length);
+            const baseMuseumValue = computed(() => showcase.value.reduce((sum, item) => sum + (item?.value || 0), 0));
+            const totalMuseumValue = computed(() => baseMuseumValue.value + totalSetBonusValue.value);
+
+            const museumTitle = computed(() => {
+                const val = totalMuseumValue.value;
+                if (val < 10000000) return "🏡 街头收藏室";
+                if (val < 30000000) return "🪙 区域典藏馆";
+                if (val < 50000000) return "🏛️ 区域展览馆";
+                if (val < 100000000) return "📜 文献传承馆";
+                if (val < 250000000) return "🎨 国家文物馆";
+                if (val < 500000000) return "🖼️ 国际艺术馆";
+                if (val < 1000000000) return "🌍 环球艺术中心";
+                if (val < 1500000000) return "👑 现代大都会殿";
+                if (val < 2500000000) return "✨ 至尊文化殿";
+                if (val < 3500000000) return "🚀 银河珍品馆";
+                if (val < 4500000000) return "🏆 天穹瑰宝殿";
+                if (val < 5000000000) return "💎 终极传奇殿";
+                return "🌟 终极万神至尊殿";
+            });
+
+            const toggleGroup = (groupId) => { collapsedGroups.value[groupId] = !collapsedGroups.value[groupId]; };
+            const isGroupCollapsed = (groupId) => !!collapsedGroups.value[groupId];
+
+            const groupedShowcase = computed(() => {
+                if (displayGroupMode.value === 'none') return [];
+                
+                if (displayGroupMode.value === 'type') {
+                    const buckets = {};
+                    showcase.value.forEach((item, index) => {
+                        if (!item) return;
+                        const tName = item.typeName || "未知大类";
+                        if (!buckets[tName]) buckets[tName] = { id: 'type-' + (item.type || 'unknown'), title: '📂 ' + tName, list: [] };
+                        buckets[tName].list.push({ item, globalIndex: index });
+                    });
+                    return Object.values(buckets);
+                }
+
+                if (displayGroupMode.value === 'rarity') {
+                    const groups = {
+                        4: { id: "rarity-4", title: "🟠 传世至尊 / 传奇名画", list: [] },
+                        3: { id: "rarity-3", title: "🟣 馆藏泰斗 / 限定闪卡", list: [] },
+                        2: { id: "rarity-2", title: "🔵 高档珍玩 / 异画典藏", list: [] },
+                        1: { id: "rarity-1", title: "🟢 初级名录 / 机制精工", list: [] }
+                    };
+                    showcase.value.forEach((item, index) => {
+                        if (item && groups[item.rarity]) groups[item.rarity].list.push({ item, globalIndex: index });
+                    });
+                    return Object.values(groups).filter(g => g.list.length > 0);
+                }
+                return [];
+            });
+
+            const addLog = (msg) => {
+                logs.value.unshift(msg);
+                if (logs.value.length > 8) logs.value.pop();
+            };
+
+            const selectMap = (map) => {
+                if (!map) return;
+                if (totalMuseumValue.value < map.reqValue) return alert(`🔒 区域未准考！需要总馆值达到 [￥${map.reqValue.toLocaleString()}]。`);
+                currentMapId.value = map.id;
+                recentFoundItem.value = null; 
+                addLog(`🎯 探险队转战至【${map.name}】进行深挖。`);
+            };
+
+            const getMapRarityBounds = (items) => {
+                const bounds = { min: [Infinity, Infinity, Infinity, Infinity, Infinity], max: [0, 0, 0, 0, 0] };
+                items.forEach(item => {
+                    const rarity = Number(item?.rarity);
+                    const value = Number(item?.value || 0);
+                    if (!Number.isNaN(rarity) && rarity >= 0 && rarity <= 4) {
+                        bounds.min[rarity] = Math.min(bounds.min[rarity], value);
+                        bounds.max[rarity] = Math.max(bounds.max[rarity], value);
+                    }
+                });
+                return bounds;
+            };
+
+            const handleHuntingWorkflow = () => {
+                if (isSearching.value) return;
+                if (recentFoundItem.value) { recentFoundItem.value = null; return; }
+                
+                const map = maps.find(m => m.id === currentMapId.value);
+                if (!map) return;
+                if (energy.value <= 0) return alert("精力消耗殆尽，请立刻饮茶恢复！");
+                if (money.value < map.cost) return alert("商号流动资金吃紧，请先在暂存箱变现部分展品！");
+
+                energy.value--;
+                money.value -= map.cost;
+                isSearching.value = true;
+
+                // 🦾 核心防崩溃异步抽卡引擎
+                setTimeout(() => {
+                    const allItems = Object.values(localItemsDB).filter(Boolean);
+                    // 首选按类型匹配
+                    let availableItems = allItems.filter(item => map.types.includes(item.type));
+                    // 兜底：若类型未命中，使用条目中的 maps 列表判断是否属于该地图
+                    if (!availableItems || availableItems.length === 0) {
+                        availableItems = allItems.filter(item => Array.isArray(item.maps) && item.maps.includes(map.id));
+                    }
+
+                    const mapValueCaps = {
+                        1: 1000000,
+                    };
+                    const maxValue = mapValueCaps[map.id];
+                    if (maxValue !== undefined) {
+                        const filteredByCap = availableItems.filter(item => (item.value || 0) <= maxValue);
+                        if (filteredByCap.length > 0) {
+                            availableItems = filteredByCap;
+                        }
+                    }
+
+                    if (!availableItems || availableItems.length === 0) {
+                        isSearching.value = false;
+                        console.debug('hunting-debug', { mapId: map.id, mapTypes: map.types, totalItems: allItems.length, sampleNames: Object.keys(localItemsDB).slice(0,10) });
+                        alert("⚠️ 核心警告：该考查路线对应大类在 data.js 基础资产库中为空，请先合并填充数据！");
+                        return;
+                    }
+
+                    const r = Math.random() * 100;
+                    let targetRarity = 1;
+                    if (r < 6.0) targetRarity = 4;
+                    else if (r < 18.0) targetRarity = 3;
+                    else if (r < 45.0) targetRarity = 2;
+
+                    let filtered = availableItems.filter(i => i.rarity === targetRarity);
+                    const valueBounds = getMapRarityBounds(availableItems);
+                    if (targetRarity === 1) {
+                        const higherMin = Math.min(valueBounds.min[3], valueBounds.min[4]);
+                        if (higherMin !== Infinity) {
+                            const capped = availableItems.filter(i => i.rarity === 1 && (i.value || 0) < higherMin);
+                            if (capped.length > 0) {
+                                filtered = capped;
+                            }
+                        }
+                    } else if (targetRarity === 3 || targetRarity === 4) {
+                        const greenMax = valueBounds.max[1];
+                        if (greenMax > 0) {
+                            const capped = availableItems.filter(i => i.rarity === targetRarity && (i.value || 0) > greenMax);
+                            if (capped.length > 0) {
+                                filtered = capped;
+                            }
+                        }
+                    }
+                    // ⭐ 强力降级兜底：若该稀有度断层，则使用当前地图全量池
+                    if (!filtered || filtered.length === 0) {
+                        filtered = availableItems;
+                    }
+                    
+                    const template = filtered[Math.floor(Math.random() * filtered.length)];
+                    
+                    // 终极安全守护：防止 template 为空
+                    if (!template) {
+                        isSearching.value = false;
+                        addLog("❌ 勘探出现偏差，本次考察空手而归。");
+                        return;
+                    }
+
+                    const instance = { ...template, originMap: map.name };
+
+                    bag.value.unshift(instance);
+                    isSearching.value = false;
+                    recentFoundItem.value = instance;
+
+                    addLog(`✨ 发掘出土：<span class="rarity-${instance.rarity}">[${instance.rarityName || '珍宝'}] ${instance.name}</span>！`);
+                }, 400);
+            };
+
+            const moveToShowcase = (index) => {
+                const item = bag.value[index];
+                if (!item) return;
+                if (hasItemInShowcase(item.name)) return alert("展厅里已有相同的名物陈列中，请勿重复上架！");
+                showcase.value.unshift(item);
+                bag.value.splice(index, 1);
+                addLog(`🏛️ 【${item.name}】已正式移入博物馆大厅陈列！`);
+            };
+
+            const moveToBag = (globalIndex) => {
+                const item = showcase.value[globalIndex];
+                if (!item) return;
+                showcase.value.splice(globalIndex, 1);
+                bag.value.unshift(item);
+            };
+
+            const moveToBagFromFlat = (index) => {
+                const item = showcase.value[index];
+                if (!item) return;
+                showcase.value.splice(index, 1);
+                bag.value.unshift(item);
+            };
+
+            const sellFromBag = (index) => {
+                const item = bag.value[index];
+                if (!item) return;
+                money.value += (item.value || 0);
+                bag.value.splice(index, 1);
+            };
+
+            // 快捷调试器
+            const cheatInjectAll = () => {
+                const allItems = Object.values(localItemsDB);
+                if (allItems.length === 0) return alert("基础库 localItemsDB 没有任何藏品数据，请检查 data.js！");
+                
+                allItems.slice(0, 45).forEach(item => {
+                    if (item && !hasItemInShowcase(item.name)) {
+                        showcase.value.push({ ...item, originMap: "系统调试注入" });
+                    }
+                });
+                money.value += 50000000;
+                addLog("✨ 触发调试机制：已自动上架前45种涵盖名画与卡牌的文物至常设大厅！");
+            };
+
+            onMounted(() => {
+                startEnergyRegen();
+            });
+
+            onBeforeUnmount(() => { if (timerToken) clearInterval(timerToken); });
+
+            return {
+                mobileTab, money, energy, maxEnergy, currentMapId, maps, sortedMaps, bag, showcase, logs,
+                totalMuseumValue, totalSetBonusValue, museumTitle, completedSetsCount, hasItemInShowcase, isSetComplete, 
+                getSetActivatedCount, getSetRarityName, getSetRarityClass, selectMap, moveToShowcase, moveToBag, moveToBagFromFlat, sellFromBag,
+                getMapProgress, getMapCollectedCount, getMapTotalCount, activeTab, tabOptions, filteredSets, cheatInjectAll,
+                energyProgress, energyTimerText, isSearching, recentFoundItem, handleHuntingWorkflow,
+                displayGroupMode, groupedShowcase, toggleGroup, isGroupCollapsed
+            };
+        }
+            }).mount('#app');
+    }
+
+    // 等待 data.js 填充全局变量后再初始化（最多重试 20 次，约 1s）
+    (function waitForDataAndInit(attempts){
+        applyDataToLocalDBs();
+        const hasData = Object.keys(localItemsDB).length > 0 || Object.keys(localSetsDB).length > 0;
+        if (hasData || attempts >= 20) {
+            initApp();
+        } else {
+            setTimeout(() => waitForDataAndInit((attempts||0) + 1), 50);
+        }
+    })(0);
+</script>
+</body>
+</html>
